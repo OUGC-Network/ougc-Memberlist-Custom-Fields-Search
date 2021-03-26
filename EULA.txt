@@ -1,0 +1,50 @@
+/***************************************************************************
+	OUGC.Network End User Licence Agreement
+	Copyright 2020 OUGC.Network
+****************************************************************************/
+
+This License Agreement pertains to all paid products produced by OUGC.Network.
+
+You should read the EULA in full prior to purchase (or download), and by purchasing, downloading, copying, accessing or using the product, or installing you agree to all the terms therein.
+
+All OUGC.Network products are protected by National Laws and International Laws.
+
+0. DEFINITIONS
+
+	a) PRODUCT(S): Any piece of software which is provided by OUGC.Network to its users.
+
+1. GRANT OF LICENCE
+
+This end users licence agreement grants you the following rights:
+
+	a) Install a regular license on any domain you own; use for multiple project.
+
+	b) Install, as is on a client’s domain as part of a website creation service.
+
+	c) Modification, as is in whole or part, any products without OUGC.Network's permission. 
+	
+	d) Redistribution and Reproduction: You can not directly transfer product copies to a third party, as is in whole or part, without expressly written permission from OUGC.Network.
+
+	e) You can not sell product copies, as is or modified, via a store or any other type of sales process as a standalone product.
+
+2. OTHER RIGHTS OR LIMITATIONS
+
+	a) Limitations on Installing: You can not install OUGC.Network products on servers that allow users without a licence to obtain the products illegally, in such a way that copies of products could be optained without purchasing them.
+
+	b) Limitations on Modifying: Modifying products, as is in whole or part, does not give you any additional rights and therefore you are still under agreement with this EULA.
+
+	c) Separation of Components: Products are licensed as single product. Its component parts may not be separated for use on a way that its components can work independently of themselves.
+
+	d) Termination: Notwithstanding anything to the contrary, OUGC.Network may terminate this agreement immediately upon written notice, at OUGC.Network’ sole discretion.
+
+	e) Refunds: There are no refunds, all sales are final.
+
+3. LIMITED AWARRANTY
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+/***************************************************************************
+	Last Modified: 29th of July 2020
+****************************************************************************/
