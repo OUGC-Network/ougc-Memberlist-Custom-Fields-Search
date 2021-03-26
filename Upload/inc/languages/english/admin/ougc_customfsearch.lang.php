@@ -2,13 +2,13 @@
 
 /***************************************************************************
  *
- *	OUGC Reports Filter plugin (/inc/languages/english/admin/ougc_reports_filter.lang.php)
+ *	OUGC Custom Fields Search plugin (/inc/languages/english/admin/ougc_customfsearch.lang.php)
  *	Author: Omar Gonzalez
  *	Copyright: © 2021 Omar Gonzalez
  *
  *	Website: https://ougc.network
  *
- *	Allow moderators to sort and filter reports for easy search.
+ *	Adds the option to filter members by custom profile fields in the advanced member list page.
  *
  ***************************************************************************
  
@@ -28,13 +28,8 @@
 ****************************************************************************/
 
 $l = [
-	'setting_group_ougc_reports_filter' => 'OUGC Reports Filter',
+	'setting_group_ougc_customfsearch' => 'OUGC Custom Fields Search',
+	'setting_group_ougc_customfsearch_desc' => 'Adds the option to filter members by custom profile fields in the advanced member list page.',
 
-	'ougc_reports_filter_form_title' => 'Filter & Sort',
-	'ougc_reports_filter_form_reporter' => 'Reporter',
-	'ougc_reports_filter_form_reason' => 'Report Reason',
-	'ougc_reports_filter_form_type' => 'Reported Content',
-	'ougc_reports_filter_form_thread_date' => 'Thread Date',
-	'ougc_reports_filter_form_post_date' => 'Post Date',
-	'ougc_reports_filter_form_all' => 'All',
+	'ougc_customfsearch_pluginlibrary' => 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or above, please upload this plugin to your forum and then try again.'
 ];
