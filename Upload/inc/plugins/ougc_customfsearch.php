@@ -2,117 +2,125 @@
 
 /***************************************************************************
  *
- *	OUGC Custom Fields Search plugin (/inc/plugins/ougc_customfsearch.php)
- *	Author: Omar Gonzalez
- *	Copyright: © 2021 Omar Gonzalez
+ *    OUGC Custom Fields Search plugin (/inc/plugins/ougc_customfsearch.php)
+ *    Author: Omar Gonzalez
+ *    Copyright: © 2021 Omar Gonzalez
  *
- *	Website: https://ougc.network
+ *    Website: https://ougc.network
  *
- *	Adds the option to filter members by custom profile fields in the advanced member list page.
+ *    Adds the option to filter members by custom profile fields in the advanced member list page.
  *
  ***************************************************************************
- 
-****************************************************************************
-	This program is protected software: you can make use of it under
-	the terms of the OUGC Network EULA as detailed by the included
-	"EULA.TXT" file.
+ ****************************************************************************
+ * This program is protected software: you can make use of it under
+ * the terms of the OUGC Network EULA as detailed by the included
+ * "EULA.TXT" file.
+ *
+ * This program is distributed with the expectation that it will be
+ * useful, but WITH LIMITED WARRANTY; with a limited warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OUGC Network EULA included in the "EULA.TXT" file for more details.
+ *
+ * You should have received a copy of the OUGC Network EULA along with
+ * the package which includes this file.  If not, see
+ * <https://ougc.network/eula.txt>.
+ ****************************************************************************/
 
-	This program is distributed with the expectation that it will be
-	useful, but WITH LIMITED WARRANTY; with a limited warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	OUGC Network EULA included in the "EULA.TXT" file for more details.
-
-	You should have received a copy of the OUGC Network EULA along with
-	the package which includes this file.  If not, see
-	<https://ougc.network/eula.txt>.
-****************************************************************************/
- 
 // Die if IN_MYBB is not defined, for security reasons.
+use function OUGCCustomFSearch\Admin\_activate;
+use function OUGCCustomFSearch\Admin\_deactivate;
+use function OUGCCustomFSearch\Admin\_info;
+use function OUGCCustomFSearch\Admin\_install;
+use function OUGCCustomFSearch\Admin\_is_installed;
+use function OUGCCustomFSearch\Admin\_uninstall;
+use function OUGCCustomFSearch\Core\addHooks;
+
 defined('IN_MYBB') || die('This file cannot be accessed directly.');
 
 define('OUGC_CUSTOMFSEARCH_ROOT', MYBB_ROOT . 'inc/plugins/ougc_customfsearch');
 
-require_once OUGC_CUSTOMFSEARCH_ROOT.'/core.php';
+require_once OUGC_CUSTOMFSEARCH_ROOT . '/core.php';
 
 // PLUGINLIBRARY
-defined('PLUGINLIBRARY') or define('PLUGINLIBRARY', MYBB_ROOT.'inc/plugins/pluginlibrary.php');
+defined('PLUGINLIBRARY') or define('PLUGINLIBRARY', MYBB_ROOT . 'inc/plugins/pluginlibrary.php');
 
 // Add our hooks
-if(defined('IN_ADMINCP'))
-{
-	require_once OUGC_CUSTOMFSEARCH_ROOT.'/admin.php';
-}
-else
-{
-	require_once OUGC_CUSTOMFSEARCH_ROOT.'/forum_hooks.php';
+if (defined('IN_ADMINCP')) {
+    require_once OUGC_CUSTOMFSEARCH_ROOT . '/admin.php';
+} else {
+    require_once OUGC_CUSTOMFSEARCH_ROOT . '/forum_hooks.php';
 
-	\OUGCCustomFSearch\Core\addHooks('OUGCCustomFSearch\ForumHooks');
+    addHooks('OUGCCustomFSearch\ForumHooks');
 }
 
 // Plugin API
 function ougc_customfsearch_info()
 {
-	return \OUGCCustomFSearch\Admin\_info();
+    return _info();
 }
 
 // Activate the plugin.
 function ougc_customfsearch_activate()
 {
-	\OUGCCustomFSearch\Admin\_activate();
+    _activate();
 }
 
 // Deactivate the plugin.
 function ougc_customfsearch_deactivate()
 {
-	\OUGCCustomFSearch\Admin\_deactivate();
+    _deactivate();
 }
 
 // Install the plugin.
 function ougc_customfsearch_install()
 {
-	\OUGCCustomFSearch\Admin\_install();
+    _install();
 }
 
 // Check if installed.
 function ougc_customfsearch_is_installed()
 {
-	return \OUGCCustomFSearch\Admin\_is_installed();
+    return _is_installed();
 }
 
 // Unnstall the plugin.
 function ougc_customfsearch_uninstall()
 {
-	\OUGCCustomFSearch\Admin\_uninstall();
+    _uninstall();
 }
 
-if(!function_exists('control_object')) {
-	function control_object(&$obj, $code) {
-		static $cnt = 0;
-		$newname = '_objcont_'.(++$cnt);
-		$objserial = serialize($obj);
-		$classname = get_class($obj);
-		$checkstr = 'O:'.strlen($classname).':"'.$classname.'":';
-		$checkstr_len = strlen($checkstr);
-		if(substr($objserial, 0, $checkstr_len) == $checkstr) {
-			$vars = array();
-			// grab resources/object etc, stripping scope info from keys
-			foreach((array)$obj as $k => $v) {
-				if($p = strrpos($k, "\0"))
-					$k = substr($k, $p+1);
-				$vars[$k] = $v;
-			}
-			if(!empty($vars))
-				$code .= '
+if (!function_exists('control_object')) {
+    function control_object(&$obj, $code)
+    {
+        static $cnt = 0;
+        $newname = '_objcont_' . (++$cnt);
+        $objserial = serialize($obj);
+        $classname = get_class($obj);
+        $checkstr = 'O:' . strlen($classname) . ':"' . $classname . '":';
+        $checkstr_len = strlen($checkstr);
+        if (substr($objserial, 0, $checkstr_len) == $checkstr) {
+            $vars = array();
+            // grab resources/object etc, stripping scope info from keys
+            foreach ((array)$obj as $k => $v) {
+                if ($p = strrpos($k, "\0")) {
+                    $k = substr($k, $p + 1);
+                }
+                $vars[$k] = $v;
+            }
+            if (!empty($vars)) {
+                $code .= '
 					function ___setvars(&$a) {
 						foreach($a as $k => &$v)
 							$this->$k = $v;
 					}
 				';
-			eval('class '.$newname.' extends '.$classname.' {'.$code.'}');
-			$obj = unserialize('O:'.strlen($newname).':"'.$newname.'":'.substr($objserial, $checkstr_len));
-			if(!empty($vars))
-				$obj->___setvars($vars);
-		}
-		// else not a valid object or PHP serialize has changed
-	}
+            }
+            eval('class ' . $newname . ' extends ' . $classname . ' {' . $code . '}');
+            $obj = unserialize('O:' . strlen($newname) . ':"' . $newname . '":' . substr($objserial, $checkstr_len));
+            if (!empty($vars)) {
+                $obj->___setvars($vars);
+            }
+        }
+        // else not a valid object or PHP serialize has changed
+    }
 }
