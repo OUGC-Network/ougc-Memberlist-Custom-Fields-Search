@@ -30,5 +30,12 @@ $l = [
     'setting_group_ougc_customfsearch' => 'OUGC Member List Advanced Search',
     'setting_group_ougc_customfsearch_desc' => 'Allow more complex searches in the member list advanced search page.',
 
+    'setting_group_ougcCustomFieldsSearch' => 'Member List Advanced Search',
+    'setting_group_ougcCustomFieldsSearch_desc' => 'Allow more complex searches in the member list advanced search page.',
+    'setting_ougcCustomFieldsSearch_ignoredProfileFieldsIDs' => 'Disabled Profile Fields (IDs)',
+    'setting_ougcCustomFieldsSearch_ignoredProfileFieldsIDs_desc' => 'Select which custom profile fields to ignore from the advanced search feature. Users will not be able to search by these selected fields.',
+    'setting_ougcCustomFieldsSearch_bypassIgnoredProfileFields' => 'Bypass Disabled Profile Fields',
+    'setting_ougcCustomFieldsSearch_bypassIgnoredProfileFields_desc' => 'Select which groups are allowed to bypass the above setting.',
+
     'ougc_customfsearch_pluginlibrary' => 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or above, please upload this plugin to your forum and then try again.'
 ];

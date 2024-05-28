@@ -31,6 +31,7 @@ namespace ougc\CustomFieldsSearch\Core;
 use function ougc\CustomFieldsSearch\Admin\_info;
 
 use const ougc\CustomFieldsSearch\ROOT;
+use const ougc\CustomFieldsSearch\Core\SETTINGS;
 use const ougc\CustomFieldsSearch\Core\DEBUG;
 
 const URL = 'memberlist.php';
@@ -90,6 +91,15 @@ function addHooks(string $namespace)
             $plugins->add_hook($hookName, $callable, $priority);
         }
     }
+}
+
+function getSetting(string $settingKey = '')
+{
+    global $mybb;
+
+    return isset(SETTINGS[$settingKey]) ? SETTINGS[$settingKey] : (
+    isset($mybb->settings['ougcCustomFieldsSearch_' . $settingKey]) ? $mybb->settings['ougcCustomFieldsSearch_' . $settingKey] : false
+    );
 }
 
 function getTemplateName(string $templateName = ''): string

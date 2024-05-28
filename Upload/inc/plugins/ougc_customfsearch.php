@@ -39,6 +39,11 @@ use const ougc\CustomFieldsSearch\ROOT;
 
 defined('IN_MYBB') || die('This file cannot be accessed directly.');
 
+// You can uncomment the lines below to avoid storing some settings in the DB
+define('ougc\CustomFieldsSearch\Core\SETTINGS', [
+    //'key' => '',
+]);
+
 define('ougc\CustomFieldsSearch\Core\DEBUG', false);
 
 define('ougc\CustomFieldsSearch\ROOT', constant('MYBB_ROOT') . 'inc/plugins/ougc/CustomFieldsSearch');
@@ -51,10 +56,13 @@ defined('PLUGINLIBRARY') or define('PLUGINLIBRARY', MYBB_ROOT . 'inc/plugins/plu
 // Add our hooks
 if (defined('IN_ADMINCP')) {
     require_once ROOT . '/admin.php';
+    require_once ROOT . '/admin_hooks.php';
+
+    addHooks('ougc\CustomFieldsSearch\Hooks\Admin');
 } else {
     require_once ROOT . '/forum_hooks.php';
 
-    addHooks('ougc\CustomFieldsSearch\ForumHooks');
+    addHooks('ougc\CustomFieldsSearch\Hooks\Forum');
 }
 
 // Plugin API

@@ -42,13 +42,13 @@ function _info()
     load_language();
 
     return [
-        'name' => 'OUGC Custom Fields Search',
+        'name' => 'OUGC Member List Advanced Search',
         'description' => $lang->setting_group_ougc_customfsearch_desc,
         'website' => 'https://ougc.network',
         'author' => 'Omar G.',
         'authorsite' => 'https://ougc.network',
-        'version' => '1.8.1',
-        'versioncode' => 1801,
+        'version' => '1.8.2',
+        'versioncode' => 1802,
         'compatibility' => '18*',
         'codename' => 'ougc_customfsearch',
         'pl' => [
@@ -72,6 +72,33 @@ function _activate()
            'value'			=> -1
         ),
     ));*/
+
+    // Add settings group
+    $settingsContents = file_get_contents(ROOT . '/settings.json');
+
+    $settingsData = json_decode($settingsContents, true);
+
+    foreach ($settingsData as $settingKey => &$settingData) {
+        if (empty($lang->{"setting_ougcCustomFieldsSearch_{$settingKey}"})) {
+            continue;
+        }
+
+        if ($settingData['optionscode'] == 'select' || $settingData['optionscode'] == 'checkbox') {
+            foreach ($settingData['options'] as $optionKey) {
+                $settingData['optionscode'] .= "\n{$optionKey}={$lang->{"setting_ougcCustomFieldsSearch_{$settingKey}_{$optionKey}"}}";
+            }
+        }
+
+        $settingData['title'] = $lang->{"setting_ougcCustomFieldsSearch_{$settingKey}"};
+        $settingData['description'] = $lang->{"setting_ougcCustomFieldsSearch_{$settingKey}_desc"};
+    }
+
+    $PL->settings(
+        'ougcCustomFieldsSearch',
+        $lang->setting_group_ougcCustomFieldsSearch,
+        $lang->setting_group_ougcCustomFieldsSearch_desc,
+        $settingsData
+    );
 
     // Add templates
     $templatesDirIterator = new DirectoryIterator(ROOT . '/templates');
@@ -146,6 +173,8 @@ function _uninstall()
     load_pluginlibrary();
 
     $PL->settings_delete('ougc_customfsearch');
+
+    $PL->settings_delete('ougcPrivateThreads');
 
     $PL->templates_delete('ougccustomfsearch');
 

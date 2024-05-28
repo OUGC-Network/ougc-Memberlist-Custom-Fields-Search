@@ -26,10 +26,11 @@
  * <https://ougc.network/eula.txt>.
  ****************************************************************************/
 
-namespace ougc\CustomFieldsSearch\ForumHooks;
+namespace ougc\CustomFieldsSearch\Hooks\Forum;
 
 use MyBB;
 
+use function ougc\CustomFieldsSearch\Core\getSetting;
 use function ougc\CustomFieldsSearch\Core\getTemplate;
 use function ougc\CustomFieldsSearch\Core\urlHandlerBuild;
 use function ougc\CustomFieldsSearch\Core\load_language;
@@ -59,8 +60,6 @@ function memberlist_search()
 
     $searchableFields = '';
 
-    $customFieldsCache = $mybb->cache->read('profilefields');
-
     $alternativeBackgroundGroups = alt_trow();
 
     $groupSelect = $groupSelectOptions = $searchGroupsCheckedPrimary = $searchGroupsCheckedAdditional = $searchGroupsCheckedBoth = '';
@@ -76,7 +75,7 @@ function memberlist_search()
     foreach ($mybb->cache->read('usergroups') as $groupID => $groupData) {
         $groupID = (int)$groupID;
 
-        if ($groupID === 1) {
+        if (empty($groupData['showmemberlist']) || $groupID === 1) {
             continue;
         }
 
@@ -93,13 +92,21 @@ function memberlist_search()
 
     $groupSelect = eval(getTemplate('groupsSelect'));
 
+    $customFieldsCache = $mybb->cache->read('profilefields');
+
     if (is_array($customFieldsCache)) {
         $searchTypeFields = $mybb->get_input('searchTypeField', MyBB::INPUT_ARRAY);
 
         $alternativeBackground = alt_trow(true);
 
+        $ignoredProfileFieldsIDs = array_flip(explode(',', getSetting('ignoredProfileFieldsIDs')));
+
         foreach ($customFieldsCache as $customFieldData) {
-            if (!is_member($customFieldData['viewableby'])) {
+            if (!is_member(
+                    $customFieldData['viewableby']
+                ) || (isset($ignoredProfileFieldsIDs[$customFieldData['fid']]) && !is_member(
+                        getSetting('bypassIgnoredProfileFields')
+                    ))) {
                 continue;
             }
 
@@ -291,6 +298,8 @@ function memberlist_intermediate(): bool
 
     $customFieldsCacheIDs = array_column($customFieldsCache, 'fid');
 
+    $ignoredProfileFieldsIDs = array_flip(explode(',', getSetting('ignoredProfileFieldsIDs')));
+
     foreach ($ougcCustomFieldSearchFilters as $filterKey => $filterValue) {
         if (empty($filterValue)) {
             continue;
@@ -307,6 +316,14 @@ function memberlist_intermediate(): bool
         }
 
         $customFieldData = $customFieldsCache[$customFieldsCacheIndex];
+
+        if (!is_member(
+                $customFieldData['viewableby']
+            ) || (isset($ignoredProfileFieldsIDs[$customFieldData['fid']]) && !is_member(
+                    getSetting('bypassIgnoredProfileFields')
+                ))) {
+            continue;
+        }
 
         $fieldTypeValues = explode("\n", $customFieldData['type'], '2');
 
@@ -401,7 +418,7 @@ function memberlist_intermediate(): bool
                 'skype',
                 'google',
                 'icq',
-                'sort',
+                'sort', // todo, later add option to sort by profile field
                 'order',
                 'perpage'
             ] as $searchOption

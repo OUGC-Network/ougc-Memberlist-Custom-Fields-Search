@@ -1,0 +1,10 @@
+{
+  "ignoredProfileFieldsIDs": {
+    "optionscode": "text",
+    "value": ""
+  },
+  "bypassIgnoredProfileFields": {
+    "optionscode": "groupselect",
+    "value": 4
+  }
+}
