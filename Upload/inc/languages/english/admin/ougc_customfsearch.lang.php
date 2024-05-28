@@ -27,8 +27,8 @@
  ****************************************************************************/
 
 $l = [
-    'setting_group_ougc_customfsearch' => 'OUGC Custom Fields Search',
-    'setting_group_ougc_customfsearch_desc' => 'Adds the option to filter members by custom profile fields in the advanced member list page.',
+    'setting_group_ougc_customfsearch' => 'OUGC Member List Advanced Search',
+    'setting_group_ougc_customfsearch_desc' => 'Allow more complex searches in the member list advanced search page.',
 
     'ougc_customfsearch_pluginlibrary' => 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or above, please upload this plugin to your forum and then try again.'
 ];

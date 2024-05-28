@@ -26,12 +26,12 @@
  * <https://ougc.network/eula.txt>.
  ****************************************************************************/
 
-namespace OUGCCustomFSearch\Core;
+namespace ougc\CustomFieldsSearch\Core;
 
-use function OUGCCustomFSearch\Admin\_info;
+use function ougc\CustomFieldsSearch\Admin\_info;
 
-use const OUGCCustomFSearch\ROOT;
-use const OUGCCustomFSearch\Core\DEBUG;
+use const ougc\CustomFieldsSearch\ROOT;
+use const ougc\CustomFieldsSearch\Core\DEBUG;
 
 const URL = 'memberlist.php';
 

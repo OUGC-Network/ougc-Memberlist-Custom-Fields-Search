@@ -27,21 +27,21 @@
  ****************************************************************************/
 
 // Die if IN_MYBB is not defined, for security reasons.
-use function OUGCCustomFSearch\Admin\_activate;
-use function OUGCCustomFSearch\Admin\_deactivate;
-use function OUGCCustomFSearch\Admin\_info;
-use function OUGCCustomFSearch\Admin\_install;
-use function OUGCCustomFSearch\Admin\_is_installed;
-use function OUGCCustomFSearch\Admin\_uninstall;
-use function OUGCCustomFSearch\Core\addHooks;
+use function ougc\CustomFieldsSearch\Admin\_activate;
+use function ougc\CustomFieldsSearch\Admin\_deactivate;
+use function ougc\CustomFieldsSearch\Admin\_info;
+use function ougc\CustomFieldsSearch\Admin\_install;
+use function ougc\CustomFieldsSearch\Admin\_is_installed;
+use function ougc\CustomFieldsSearch\Admin\_uninstall;
+use function ougc\CustomFieldsSearch\Core\addHooks;
 
-use const OUGCCustomFSearch\ROOT;
+use const ougc\CustomFieldsSearch\ROOT;
 
 defined('IN_MYBB') || die('This file cannot be accessed directly.');
 
-define('OUGCCustomFSearch\Core\DEBUG', false);
+define('ougc\CustomFieldsSearch\Core\DEBUG', false);
 
-define('OUGCCustomFSearch\ROOT', constant('MYBB_ROOT') . 'inc/plugins/ougc_customfsearch');
+define('ougc\CustomFieldsSearch\ROOT', constant('MYBB_ROOT') . 'inc/plugins/ougc/CustomFieldsSearch');
 
 require_once ROOT . '/core.php';
 
@@ -54,7 +54,7 @@ if (defined('IN_ADMINCP')) {
 } else {
     require_once ROOT . '/forum_hooks.php';
 
-    addHooks('OUGCCustomFSearch\ForumHooks');
+    addHooks('ougc\CustomFieldsSearch\ForumHooks');
 }
 
 // Plugin API

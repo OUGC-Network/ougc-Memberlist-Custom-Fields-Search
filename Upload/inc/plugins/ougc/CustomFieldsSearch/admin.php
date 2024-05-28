@@ -26,14 +26,14 @@
  * <https://ougc.network/eula.txt>.
  ****************************************************************************/
 
-namespace OUGCCustomFSearch\Admin;
+namespace ougc\CustomFieldsSearch\Admin;
 
 use DirectoryIterator;
 
-use function OUGCCustomFSearch\Core\load_language;
-use function OUGCCustomFSearch\Core\load_pluginlibrary;
+use function ougc\CustomFieldsSearch\Core\load_language;
+use function ougc\CustomFieldsSearch\Core\load_pluginlibrary;
 
-use const OUGCCustomFSearch\ROOT;
+use const ougc\CustomFieldsSearch\ROOT;
 
 function _info()
 {

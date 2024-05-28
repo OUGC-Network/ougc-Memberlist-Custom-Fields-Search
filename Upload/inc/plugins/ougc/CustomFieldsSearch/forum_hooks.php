@@ -26,16 +26,14 @@
  * <https://ougc.network/eula.txt>.
  ****************************************************************************/
 
-namespace OUGCCustomFSearch\ForumHooks;
+namespace ougc\CustomFieldsSearch\ForumHooks;
 
 use MyBB;
 
-use PHP_CodeSniffer\Generators\HTML;
-
-use function OUGCCustomFSearch\Core\getTemplate;
-use function OUGCCustomFSearch\Core\urlHandlerBuild;
-use function OUGCCustomFSearch\Core\load_language;
-use function OUGCCustomFSearch\Core\urlHandler;
+use function ougc\CustomFieldsSearch\Core\getTemplate;
+use function ougc\CustomFieldsSearch\Core\urlHandlerBuild;
+use function ougc\CustomFieldsSearch\Core\load_language;
+use function ougc\CustomFieldsSearch\Core\urlHandler;
 
 function global_start()
 {
@@ -53,9 +51,9 @@ function memberlist_search()
     global $templates, $lang, $mybb;
     global $ougc_customfsearch, $ougcCustomFieldSearchFilters, $errors, $user;
 
-    $mybb->input['customSearchFields'] = $mybb->get_input('customSearchFields', \MyBB::INPUT_ARRAY);
+    $mybb->input['customSearchFields'] = $mybb->get_input('customSearchFields', MyBB::INPUT_ARRAY);
 
-    $mybb->input['customSearchGroups'] = $mybb->get_input('customSearchGroups', \MyBB::INPUT_ARRAY);
+    $mybb->input['customSearchGroups'] = $mybb->get_input('customSearchGroups', MyBB::INPUT_ARRAY);
 
     load_language();
 
@@ -96,7 +94,7 @@ function memberlist_search()
     $groupSelect = eval(getTemplate('groupsSelect'));
 
     if (is_array($customFieldsCache)) {
-        $searchTypeFields = $mybb->get_input('searchTypeField', \MyBB::INPUT_ARRAY);
+        $searchTypeFields = $mybb->get_input('searchTypeField', MyBB::INPUT_ARRAY);
 
         $alternativeBackground = alt_trow(true);
 
@@ -251,7 +249,7 @@ function memberlist_intermediate(): bool
 
     $ougcCustomFieldSearchFilters = $mybb->get_input('customSearchFields', MyBB::INPUT_ARRAY);
 
-    $searchTypeFields = $mybb->get_input('searchTypeField', \MyBB::INPUT_ARRAY);
+    $searchTypeFields = $mybb->get_input('searchTypeField', MyBB::INPUT_ARRAY);
 
     $whereClauses = $whereClausesGroups = $ougcCustomFieldSearchUrlParams = [];
 
