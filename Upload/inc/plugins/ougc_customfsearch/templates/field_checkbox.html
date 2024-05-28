@@ -1,0 +1,11 @@
+<input type="radio" class="radio" name="customSearchFields[{$customFieldKey}]"
+       id="customSearchFields{$customFieldKey}Has"
+       value="has" {$searchTypeCheckedHas}>
+<label for="customSearchFields{$customFieldKey}Has"><abbr title="{$labelTitleHas}">{$lang->ougc_customfsearch_formFieldTypeHas}</abbr></label>
+<input type="radio" class="radio" name="customSearchFields[{$customFieldKey}]"
+       id="customSearchFields{$customFieldKey}doesNotHave" value="doesNotHave" {$searchTypeCheckedDoesNotHave}>
+<label for="customSearchFields{$customFieldKey}doesNotHave"><abbr title="{$labelTitleDoesNotHave}">{$lang->ougc_customfsearch_formFieldTypeDoesNotHave}</abbr></label>
+<input type="radio" class="radio" name="customSearchFields[{$customFieldKey}]"
+       id="customSearchFields{$customFieldKey}Ignore" value="ignore" {$searchTypeCheckedIgnore}>
+<label for="customSearchFields{$customFieldKey}Ignore"><abbr
+        title="{$lang->ougc_customfsearch_formFieldTypeIgnoreTitle}">{$lang->ougc_customfsearch_formFieldTypeIgnore}</abbr></label>

@@ -30,6 +30,11 @@ namespace OUGCCustomFSearch\Core;
 
 use function OUGCCustomFSearch\Admin\_info;
 
+use const OUGCCustomFSearch\ROOT;
+use const OUGCCustomFSearch\Core\DEBUG;
+
+const URL = 'memberlist.php';
+
 function load_language()
 {
     global $lang;
@@ -87,36 +92,69 @@ function addHooks(string $namespace)
     }
 }
 
-// Set url
-function set_url($url = null)
+function getTemplateName(string $templateName = ''): string
 {
-    static $current_url = '';
+    $templatePrefix = '';
 
-    if (($url = trim($url))) {
-        $current_url = $url;
+    if ($templateName) {
+        $templatePrefix = '_';
     }
 
-    return $current_url;
+    return "ougccustomfsearch{$templatePrefix}{$templateName}";
 }
 
-// Set url
-function get_url()
+function getTemplate(string $templateName = '', bool $enableHTMLComments = true): string
 {
-    return set_url();
+    global $templates;
+
+    if (DEBUG) {
+        $filePath = ROOT . "/templates/{$templateName}.html";
+
+        $templateContents = file_get_contents($filePath);
+
+        $templates->cache[getTemplateName($templateName)] = $templateContents;
+    } elseif (my_strpos($templateName, '/') !== false) {
+        $templateName = substr($templateName, strpos($templateName, '/') + 1);
+    }
+
+    return $templates->render(getTemplateName($templateName), true, $enableHTMLComments);
 }
 
-// Build an url parameter
-function build_url($urlappend = [], $amp = '&amp;')
+function urlHandler(string $newUrl = ''): string
+{
+    static $setUrl = URL;
+
+    if (($newUrl = trim($newUrl))) {
+        $setUrl = $newUrl;
+    }
+
+    return $setUrl;
+}
+
+function urlHandlerSet(string $newUrl): string
+{
+    return urlHandler($newUrl);
+}
+
+function urlHandlerGet(): string
+{
+    return urlHandler();
+}
+
+function urlHandlerBuild(array $urlAppend = [], bool $fetchImportUrl = false, bool $encode = true): string
 {
     global $PL;
 
-    $PL or require_once PLUGINLIBRARY;
-
-    if ($urlappend && !is_array($urlappend)) {
-        $urlappend = explode('=', $urlappend);
-
-        $urlappend = [$urlappend[0] => $urlappend[1]];
+    if (!is_object($PL)) {
+        $PL or require_once PLUGINLIBRARY;
     }
 
-    return $PL->url_append(get_url(), $urlappend, $amp, true);
+    if ($fetchImportUrl === false) {
+        if ($urlAppend && !is_array($urlAppend)) {
+            $urlAppend = explode('=', $urlAppend);
+            $urlAppend = [$urlAppend[0] => $urlAppend[1]];
+        }
+    }
+
+    return $PL->url_append(urlHandlerGet(), $urlAppend, '&amp;', $encode);
 }

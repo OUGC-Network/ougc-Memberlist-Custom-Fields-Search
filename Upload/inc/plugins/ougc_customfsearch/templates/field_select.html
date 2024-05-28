@@ -1,3 +1,10 @@
-<select name="profile_fields[{$field}][]" multiple="multiple" size="5">
-	{$select}
+<select name="customSearchFields[{$customFieldKey}][]" multiple="multiple" size="5" style="min-width: 10em">
+    {$selectOptions}
 </select>
+<br/>
+<input type="radio" class="radio" name="searchTypeField[{$customFieldKey}]" id="searchTypeField{$customFieldKey}Exactly"
+       value="exactly" {$searchTypeCheckedExactly}>
+<label for="searchTypeField{$customFieldKey}Exactly"><abbr title="{$lang->ougc_customfsearch_formFieldTypeIn}">{$lang->ougc_customfsearch_formFieldTypeExactly}</abbr></label>
+<input type="radio" class="radio" name="searchTypeField[{$customFieldKey}]"
+       id="searchTypeField{$customFieldKey}DoesNotHave" value="doesNotHave" {$searchTypeCheckedDoesNotHave}>
+<label for="searchTypeField{$customFieldKey}DoesNotHave"><abbr title="{$lang->ougc_customfsearch_formFieldTypeNotIn}">{$lang->ougc_customfsearch_formFieldTypeDoesNotHave}</abbr></label>

@@ -1,7 +1,36 @@
 <tr>
-	<td class="tcat" colspan="2">
-		<strong>{$lang->ougc_customfsearch_form_title}</strong>
-		<input type="hidden" name="do_customfsearch" value="1" />
-	</td>
+    <td class="{$alternativeBackgroundGroups}" width="25%" valign="top">
+        <strong>{$lang->ougc_customfsearch_form_groups}:</strong></td>
+    <td class="{$alternativeBackgroundGroups}" width="75%">
+        {$groupSelect}
+        <br/>
+        <input type="radio" class="radio" name="searchGroups" id="searchGroupsPrimary" value="primary"
+               {$searchGroupsCheckedPrimary}>
+        <label for="searchGroupsPrimary"><abbr title="{$lang->ougc_customfsearch_formFieldTypeAnd}">{$lang->ougc_customfsearch_form_groups_primary}</abbr></label>
+        <input type="radio" class="radio" name="searchGroups" id="searchGroupsAdditional" value="additional"
+               {$searchGroupsCheckedAdditional}>
+        <label for="searchGroupsAdditional"><abbr title="{$lang->ougc_customfsearch_formFieldTypeOr}">{$lang->ougc_customfsearch_form_groups_additional}</abbr></label>
+        <input type="radio" class="radio" name="searchGroups" id="searchGroupsBoth" value="both"
+               {$searchGroupsCheckedBoth}>
+        <label for="searchGroupsBoth"><abbr title="{$lang->ougc_customfsearch_form_groups_both_title}">{$lang->ougc_customfsearch_form_groups_both}</abbr></label>
+    </td>
 </tr>
-{$fields}
+<tr>
+    <td class="tcat" colspan="2">
+        <strong>{$lang->ougc_customfsearch_form_title}</strong>
+        <input type="hidden" name="doCustomFieldsSearch" value="1"/>
+    </td>
+</tr>
+{$searchableFields}
+<tr>
+    <td class="{$alternativeBackground}" colspan="2">
+        <strong>{$lang->ougc_customfsearch_form_type}:</strong>
+        <input type="radio" class="radio" name="searchType" id="searchTypeStrict" value="strict"
+               {$searchTypeCheckedStrict}>
+        <label for="searchTypeStrict"><abbr title="{$lang->ougc_customfsearch_formFieldTypeAnd}">{$lang->ougc_customfsearch_form_type_all}</abbr></label>
+        <input type="radio" class="radio" name="searchType" id="searchTypeAny" value="any" {$searchTypeCheckedAny}>
+        <label for="searchTypeAny"><abbr title="{$lang->ougc_customfsearch_formFieldTypeOr}">{$lang->ougc_customfsearch_form_type_any}</abbr></label>
+        <input type="radio" class="radio" name="searchType" id="searchTypeXor" value="xor" {$searchTypeCheckedXor}>
+        <label for="searchTypeXor"><abbr title="{$lang->ougc_customfsearch_formFieldTypeXor}">{$lang->ougc_customfsearch_form_type_xor}</abbr></label>
+    </td>
+</tr>

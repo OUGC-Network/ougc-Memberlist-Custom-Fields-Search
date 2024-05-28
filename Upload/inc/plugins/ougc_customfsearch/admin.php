@@ -72,7 +72,7 @@ function _activate()
     ));*/
 
     // Add templates
-    $templatesDirIterator = new DirectoryIterator(OUGC_CUSTOMFSEARCH_ROOT . '/templates');
+    $templatesDirIterator = new DirectoryIterator(ROOT . '/templates');
 
     $templates = [];
 

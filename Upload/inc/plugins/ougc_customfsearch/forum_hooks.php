@@ -30,9 +30,12 @@ namespace OUGCCustomFSearch\ForumHooks;
 
 use MyBB;
 
-use function OUGCCustomFSearch\Core\build_url;
+use PHP_CodeSniffer\Generators\HTML;
+
+use function OUGCCustomFSearch\Core\getTemplate;
+use function OUGCCustomFSearch\Core\urlHandlerBuild;
 use function OUGCCustomFSearch\Core\load_language;
-use function OUGCCustomFSearch\Core\set_url;
+use function OUGCCustomFSearch\Core\urlHandler;
 
 function global_start()
 {
@@ -48,91 +51,186 @@ function global_start()
 function memberlist_search()
 {
     global $templates, $lang, $mybb;
-    global $ougc_customfsearch, $filter;
+    global $ougc_customfsearch, $ougcCustomFieldSearchFilters, $errors, $user;
+
+    $mybb->input['customSearchFields'] = $mybb->get_input('customSearchFields', \MyBB::INPUT_ARRAY);
+
+    $mybb->input['customSearchGroups'] = $mybb->get_input('customSearchGroups', \MyBB::INPUT_ARRAY);
 
     load_language();
 
-    $fields = '';
+    $searchableFields = '';
 
-    $pfcache = $mybb->cache->read('profilefields');
+    $customFieldsCache = $mybb->cache->read('profilefields');
 
-    if (is_array($pfcache)) {
-        foreach ($pfcache as $profilefield) {
-            if (!is_member($profilefield['viewableby'])) {
+    $alternativeBackgroundGroups = alt_trow();
+
+    $groupSelect = $groupSelectOptions = $searchGroupsCheckedPrimary = $searchGroupsCheckedAdditional = $searchGroupsCheckedBoth = '';
+
+    if ($mybb->get_input('searchGroups') === 'primary') {
+        $searchGroupsCheckedPrimary = 'checked="checked"';
+    } elseif ($mybb->get_input('searchGroups') === 'additional') {
+        $searchGroupsCheckedAdditional = 'checked="checked"';
+    } else {
+        $searchGroupsCheckedBoth = 'checked="checked"';
+    }
+
+    foreach ($mybb->cache->read('usergroups') as $groupID => $groupData) {
+        $groupID = (int)$groupID;
+
+        if ($groupID === 1) {
+            continue;
+        }
+
+        $optionSelect = '';
+
+        if (isset($mybb->input['customSearchGroups'][$groupID])) {
+            $optionSelect = 'selected="selected"';
+        }
+
+        $groupName = htmlspecialchars_uni($groupData['title']);
+
+        $groupSelectOptions .= eval(getTemplate('groupsSelectOption'));
+    }
+
+    $groupSelect = eval(getTemplate('groupsSelect'));
+
+    if (is_array($customFieldsCache)) {
+        $searchTypeFields = $mybb->get_input('searchTypeField', \MyBB::INPUT_ARRAY);
+
+        $alternativeBackground = alt_trow(true);
+
+        foreach ($customFieldsCache as $customFieldData) {
+            if (!is_member($customFieldData['viewableby'])) {
                 continue;
             }
 
-            $profilefield['type'] = htmlspecialchars_uni($profilefield['type']);
+            $customFieldData['type'] = htmlspecialchars_uni($customFieldData['type']);
 
-            $profilefield['name'] = htmlspecialchars_uni($profilefield['name']);
+            $customFieldData['name'] = htmlspecialchars_uni($customFieldData['name']);
 
-            $profilefield['description'] = htmlspecialchars_uni($profilefield['description']);
+            $customFieldData['description'] = htmlspecialchars_uni($customFieldData['description']);
 
-            $thing = explode("\n", $profilefield['type'], '2');
+            $fieldTypeValues = explode("\n", $customFieldData['type'], '2');
 
-            $type = $thing[0];
+            $fieldType = $fieldTypeValues[0] ?? '';
 
-            if (isset($thing[1])) {
-                $options = $thing[1];
-            } else {
-                $options = array();
-            }
+            $fieldOptions = $fieldTypeValues[1] ?? [];
 
-            $field = "fid{$profilefield['fid']}";
+            $customFieldKey = "fid{$customFieldData['fid']}";
 
-            $select = '';
+            $selectOptions = '';
 
             if ($errors) {
-                if (!isset($mybb->input['profile_fields'][$field])) {
-                    $mybb->input['profile_fields'][$field] = '';
+                if (!isset($mybb->input['customSearchFields'][$customFieldKey])) {
+                    $mybb->input['customSearchFields'][$customFieldKey] = '';
                 }
-                $userfield = $mybb->input['profile_fields'][$field];
+
+                $userFieldValue = $mybb->input['customSearchFields'][$customFieldKey];
             } else {
-                $userfield = $user[$field];
+                $userFieldValue = $user[$customFieldKey];
             }
 
-            if ($type == 'multiselect' || $type == 'select' || $type == 'radio' || $type == 'checkbox') {
-                $expoptions = explode("\n", $options);
+            if (in_array($fieldType, ['multiselect', 'select', 'radio', 'checkbox'])) {
+                foreach (explode("\n", $fieldOptions) as $optionValue) {
+                    $optionValue = trim($optionValue);
+                    $optionValue = str_replace("\n", "\\n", $optionValue);
+                    $optionSelect = '';
 
-                if (is_array($expoptions)) {
-                    foreach ($expoptions as $key => $val) {
-                        $val = trim($val);
-                        $val = str_replace("\n", "\\n", $val);
-                        $sel = '';
-                        if ($val == htmlspecialchars_uni($userfield)) {
-                            $sel = ' selected="selected"';
-                        }
-
-                        $select .= eval($templates->render('ougccustomfsearch_field_select_option'));
+                    if ($optionValue == $userFieldValue) {
+                        $optionSelect = ' selected="selected"';
                     }
 
-                    if (!$profilefield['length']) {
-                        $profilefield['length'] = 1;
-                    }
-
-                    $input = eval($templates->render('ougccustomfsearch_field_select'));
+                    $selectOptions .= eval(getTemplate('field_select_option'));
                 }
+
+                if (!$customFieldData['length']) {
+                    $customFieldData['length'] = 1;
+                }
+
+                $searchTypeCheckedExactly = 'checked="checked"';
+
+                $searchTypeCheckedDoesNotHave = '';
+
+                if ($searchTypeFields[$customFieldKey] === 'doesNotHave') {
+                    $searchTypeCheckedExactly = '';
+
+                    $searchTypeCheckedDoesNotHave = 'checked="checked"';
+                }
+
+                $inputField = eval(getTemplate('field_select'));
+            } elseif (in_array($fieldType, ['file'])) {
+                $filterValue = htmlspecialchars_uni($ougcCustomFieldSearchFilters[$customFieldKey]);
+
+                $searchTypeCheckedIgnore = 'checked="checked"';
+
+                $searchTypeCheckedHas = $searchTypeCheckedDoesNotHave = '';
+
+                if ($searchTypeFields[$customFieldKey] === 'has') {
+                    $searchTypeCheckedHas = 'checked="checked"';
+
+                    $searchTypeCheckedIgnore = '';
+                } elseif ($searchTypeFields[$customFieldKey] === 'doesNotHave') {
+                    $searchTypeCheckedDoesNotHave = 'checked="checked"';
+
+                    $searchTypeCheckedIgnore = '';
+                }
+
+                $labelTitleHas = $lang->sprintf(
+                    $lang->ougc_customfsearch_formFieldTypeHasUploaded,
+                    $customFieldData['name']
+                );
+
+                $labelTitleDoesNotHave = $lang->sprintf(
+                    $lang->ougc_customfsearch_formFieldTypeDoesNotHaveUpload,
+                    $customFieldData['name']
+                );
+
+                $inputField = eval(getTemplate('field_checkbox'));
             } else {
-                $value = htmlspecialchars_uni($filter[$field]);
+                //text, textarea
+                $filterValue = htmlspecialchars_uni($ougcCustomFieldSearchFilters[$customFieldKey]);
 
-                $maxlength = '';
+                $maxLength = '';
 
-                if ($type != 'textarea' && $profilefield['maxlength'] > 0) {
-                    $maxlength = " maxlength=\"{$profilefield['maxlength']}\"";
+                if ($fieldType != 'textarea' && $customFieldData['maxlength'] > 0) {
+                    $maxLength = " maxlength=\"{$customFieldData['maxlength']}\"";
                 }
 
-                $input = eval($templates->render('ougccustomfsearch_field_text'));
+                $searchTypeCheckedMatches = $searchTypeCheckedDoesNotMatch = '';
+
+                if ($searchTypeFields[$customFieldKey] === 'has') {
+                    $searchTypeCheckedMatches = 'checked="checked"';
+                } elseif ($searchTypeFields[$customFieldKey] === 'doesNotMatch') {
+                    $searchTypeCheckedDoesNotMatch = 'checked="checked"';
+                }
+
+                $inputField = eval(getTemplate('field_text'));
             }
 
-            $fields .= eval($templates->render('ougccustomfsearch_field'));
+            $searchableFields .= eval(getTemplate('field'));
 
-            $code = $select = $val = $options = $expoptions = $useropts = '';
+            $selectOptions = $optionValue = $fieldOptions = $expoptions = $useropts = '';
 
-            $seloptions = [];
+            $alternativeBackground = alt_trow();
         }
     }
 
-    $ougc_customfsearch = eval($templates->render('ougccustomfsearch'));
+    $searchTypeCheckedStrict = 'checked="checked"';
+
+    $searchTypeCheckedAny = $searchTypeCheckedXor = '';
+
+    if ($mybb->get_input('searchType') === 'any') {
+        $searchTypeCheckedStrict = '';
+
+        $searchTypeCheckedAny = 'checked="checked"';
+    } elseif ($mybb->get_input('searchType') === 'xor') {
+        $searchTypeCheckedStrict = '';
+
+        $searchTypeCheckedXor = 'checked="checked"';
+    }
+
+    $ougc_customfsearch = eval(getTemplate());
 }
 
 function memberlist_start()
@@ -140,71 +238,223 @@ function memberlist_start()
     memberlist_intermediate();
 }
 
-function memberlist_intermediate()
+function memberlist_intermediate(): bool
 {
     global $mybb, $db;
-    global $filter, $search_query, $search_url;
+    global $ougcCustomFieldSearchFilters, $ougcCustomFieldSearchUrlDescription, $search_query, $ougcCustomFieldSearchUrl, $ougcCustomFieldSearchUrlParams;
 
-    if (!$mybb->get_input('do_customfsearch', MyBB::INPUT_INT)) {
-        return;
+    $ougcCustomFieldSearchUrlDescription = '';
+
+    if (empty($mybb->input['doCustomFieldsSearch'])) {
+        return false;
     }
 
-    $filter = $mybb->get_input('profile_fields', MyBB::INPUT_ARRAY);
+    $ougcCustomFieldSearchFilters = $mybb->get_input('customSearchFields', MyBB::INPUT_ARRAY);
 
-    $where = [];
+    $searchTypeFields = $mybb->get_input('searchTypeField', \MyBB::INPUT_ARRAY);
 
-    foreach ($filter as $key => $value) {
-        if (empty($value)) {
+    $whereClauses = $whereClausesGroups = $ougcCustomFieldSearchUrlParams = [];
+
+    $ougcCustomFieldSearchGroups = array_flip(
+        array_map('intval', $mybb->get_input('customSearchGroups', MyBB::INPUT_ARRAY))
+    );
+
+    $searchGroups = $mybb->get_input('searchGroups');
+
+    if (!isset($ougcCustomFieldSearchGroups[-1]) && in_array($searchGroups, ['primary', 'additional', 'both'])) {
+        foreach ($ougcCustomFieldSearchGroups as $groupID => $arrayValue) {
+            if (in_array($searchGroups, ['primary', 'both'])) {
+                $whereClausesGroups[] = "u.usergroup='{$groupID}'";
+            }
+
+            if (in_array($searchGroups, ['additional', 'both'])) {
+                switch ($db->type) {
+                    case 'pgsql':
+                    case 'sqlite':
+                        $whereClausesGroups[] = "','||u.additionalgroups||',' LIKE '%,{$groupID},%'";
+                        break;
+                    default:
+                        $whereClausesGroups[] = "CONCAT(',',u.additionalgroups,',') LIKE '%,{$groupID},%'";
+                        break;
+                }
+            }
+
+            $ougcCustomFieldSearchUrlParams["customSearchGroups[{$groupID}]"] = $groupID;
+        }
+
+        $ougcCustomFieldSearchUrlParams['searchGroups'] = $searchGroups;
+
+        $whereClauses[] = implode(' OR ', $whereClausesGroups);
+
+        $ougcCustomFieldSearchUrlParams['doCustomFieldsSearch'] = 1;
+    }
+
+    $customFieldsCache = $mybb->cache->read('profilefields');
+
+    $customFieldsCacheIDs = array_column($customFieldsCache, 'fid');
+
+    foreach ($ougcCustomFieldSearchFilters as $filterKey => $filterValue) {
+        if (empty($filterValue)) {
             continue;
         }
 
-        $field = 'fid' . (int)str_replace('fid', '', $key);
+        $fieldID = (int)str_replace('fid', '', $filterKey);
 
-        $input['do_customfsearch'] = 1;
+        $customFieldKey = "fid{$fieldID}";
 
-        if (is_array($value)) {
-            foreach ($value as $k => $v) {
-                $input["profile_fields[{$field}][{$k}]"] = htmlspecialchars_uni($v);
+        $customFieldsCacheIndex = array_search($fieldID, $customFieldsCacheIDs);
+
+        if (empty($customFieldsCache[$customFieldsCacheIndex])) {
+            continue;
+        }
+
+        $customFieldData = $customFieldsCache[$customFieldsCacheIndex];
+
+        $fieldTypeValues = explode("\n", $customFieldData['type'], '2');
+
+        $fieldType = $fieldTypeValues[0] ?? '';
+
+        $searchType = '';
+
+        if (isset($searchTypeFields[$filterKey])) {
+            $searchType = $searchTypeFields[$filterKey];
+        }
+
+        $ougcCustomFieldSearchUrlParams['doCustomFieldsSearch'] = 1;
+
+        if (in_array($fieldType, ['multiselect', 'select', 'radio', 'checkbox']) && is_array($filterValue)) {
+            foreach ($filterValue as $k => $v) {
+                $ougcCustomFieldSearchUrlParams["customSearchFields[{$customFieldKey}][{$k}]"] = htmlspecialchars_uni(
+                    $v
+                );
             }
 
-            $values = implode("', '", array_map([$db, 'escape_string'], array_map('my_strtolower', $value)));
+            $filterValueIDs = implode(
+                "', '",
+                array_map([$db, 'escape_string'], array_map('my_strtolower', $filterValue))
+            );
 
-            $where[$field] = "LOWER(f.{$field}) IN ('{$values}')";
-        } else {
-            $input["profile_fields[{$field}]"] = htmlspecialchars_uni($value);
+            $comparisonOperator = 'IN';
 
-            $where[$field] = "LOWER(f.{$field}) LIKE '%{$db->escape_string_like(my_strtolower($value))}%'";
+            if ($searchType === 'doesNotHave') {
+                $comparisonOperator = 'NOT IN';
+
+                $ougcCustomFieldSearchUrlParams["searchTypeField[{$customFieldKey}]"] = 'doesNotHave';
+            }
+
+            $whereClauses[$customFieldKey] = "LOWER(f.{$customFieldKey}) {$comparisonOperator} ('{$filterValueIDs}')";
+        } elseif ($fieldType === 'file' && $filterValue !== 'ignore') {
+            $comparisonOperator = '>=';
+
+            $comparisonOperatorSecondary = 'NOT';
+
+            if ($filterValue === 'doesNotHave') {
+                $comparisonOperator = '<';
+
+                $comparisonOperatorSecondary = '';
+            }
+
+            $ougcCustomFieldSearchUrlParams["customSearchFields[{$customFieldKey}]"] = htmlspecialchars_uni(
+                $filterValue
+            );
+
+            $whereClauses[$customFieldKey] = "f.{$customFieldKey} {$comparisonOperator} 1 OR f.{$customFieldKey} IS {$comparisonOperatorSecondary} NULL";
+        } elseif ($fieldType !== 'file') {
+            $comparisonOperator = 'LIKE';
+
+            if ($searchType === 'doesNotMatch') {
+                $comparisonOperator = 'NOT LIKE';
+
+                $ougcCustomFieldSearchUrlParams["searchTypeField[{$customFieldKey}]"] = 'doesNotMatch';
+            }
+
+            $ougcCustomFieldSearchUrlParams["customSearchFields[{$customFieldKey}]"] = htmlspecialchars_uni(
+                $filterValue
+            );
+
+            $whereClauses[$customFieldKey] = "LOWER(f.{$customFieldKey}) {$comparisonOperator} '%{$db->escape_string_like(my_strtolower($filterValue))}%'";
         }
     }
 
-    if ($where) {
-        set_url($search_url);
+    if ($whereClauses) {
+        global $lang;
+        global $sorturl, $search_url;
 
-        $search_url = build_url($input);
+        load_language();
 
-        $where = implode(' AND ', $where);
+        if ($mybb->get_input('searchType') === 'any') {
+            $whereClauses = implode(') OR (', $whereClauses);
 
-        $search_query .= " AND {$where}";
+            $ougcCustomFieldSearchUrlParams['searchType'] = 'any';
+        } elseif ($mybb->get_input('searchType') === 'xor') {
+            $whereClauses = implode(') XOR (', $whereClauses);
 
-        control_object(
-            $db,
-            '
-			function simple_select($table, $fields="*", $conditions="", $options=array())
-			{
-				static $done = false;
-		
-				if(!$done && $table == "users u" && $fields == "COUNT(*) AS users")
-				{
-					global $db;
+            $ougcCustomFieldSearchUrlParams['searchType'] = 'xor';
+        } else {
+            $whereClauses = implode(') AND (', $whereClauses);
+        }
 
-					$table .= " LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)";
+        foreach (
+            [
+                'letter',
+                'username_match',
+                'username',
+                'website',
+                'skype',
+                'google',
+                'icq',
+                'sort',
+                'order',
+                'perpage'
+            ] as $searchOption
+        ) {
+            if (isset($mybb->input[$searchOption])) {
+                $ougcCustomFieldSearchUrlParams[$searchOption] = htmlspecialchars_uni($mybb->input[$searchOption]);
+            }
+        }
 
-					$done = true;
-				}
-		
-				return parent::simple_select($table, $fields, $conditions, $options);
-			}
-		'
+        $ougcCustomFieldSearchUrl = urlHandlerBuild($ougcCustomFieldSearchUrlParams);
+
+        $ougcCustomFieldSearchUrlDescription = eval(getTemplate('urlDescription'));
+
+        $search_query .= " AND (({$whereClauses}))";
+
+        control_db(
+            'function simple_select($table, $fields = "*", $conditions = "", $options = array())
+{
+    static $done = false;
+
+    if (!$done && $table == "users u" && $fields == "COUNT(*) AS users") {
+        global $db;
+
+        $table .= " LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)";
+
+        $done = true;
+    }
+
+    return parent::simple_select($table, $fields, $conditions, $options);
+}'
         );
     }
+
+    return true;
+}
+
+function multipage(array &$paginationArguments): array
+{
+    if (THIS_SCRIPT !== 'memberlist.php') {
+        return $paginationArguments;
+    }
+
+    global $ougcCustomFieldSearchUrl, $ougcCustomFieldSearchUrlParams;
+
+    if (!isset($ougcCustomFieldSearchUrl) || !isset($ougcCustomFieldSearchUrlParams)) {
+        return $paginationArguments;
+    }
+
+    urlHandler($paginationArguments['url']);
+
+    $paginationArguments['url'] = urlHandlerBuild($ougcCustomFieldSearchUrlParams);
+
+    return $paginationArguments;
 }

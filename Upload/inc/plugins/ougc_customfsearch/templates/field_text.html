@@ -1,1 +1,10 @@
-<input type="text" name="profile_fields[{$field}]" class="textbox" size="{$profilefield['length']}"{$maxlength} value="{$value}" />
+<input type="text" name="customSearchFields[{$customFieldKey}]" class="textbox" size="{$customFieldData['length']}"
+       {$maxLength} value="{$filterValue}"/>
+<br/>
+<input type="radio" class="radio" name="searchTypeField[{$customFieldKey}]" id="searchTypeField{$customFieldKey}Matches"
+       value="matches" {$searchTypeCheckedMatches}>
+<label for="searchTypeField{$customFieldKey}Matches"><abbr title="{$lang->ougc_customfsearch_formFieldTypeLike}">{$lang->ougc_customfsearch_formFieldTypeMatches}</abbr></label>
+<input type="radio" class="radio" name="searchTypeField[{$customFieldKey}]"
+       id="searchTypeField{$customFieldKey}doesNotMatch" value="doesNotMatch" {$searchTypeCheckedDoesNotMatch}>
+<label for="searchTypeField{$customFieldKey}doesNotMatch"><abbr
+        title="{$lang->ougc_customfsearch_formFieldTypeNotLike}">{$lang->ougc_customfsearch_formFieldTypeDoesNotDoesNotMatch}</abbr></label>
