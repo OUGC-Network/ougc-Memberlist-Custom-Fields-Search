@@ -33,6 +33,8 @@ use DirectoryIterator;
 use function OUGCCustomFSearch\Core\load_language;
 use function OUGCCustomFSearch\Core\load_pluginlibrary;
 
+use const OUGCCustomFSearch\ROOT;
+
 function _info()
 {
     global $lang;

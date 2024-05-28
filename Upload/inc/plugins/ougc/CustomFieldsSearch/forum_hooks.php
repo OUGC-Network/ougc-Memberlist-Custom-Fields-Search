@@ -39,12 +39,12 @@ use function OUGCCustomFSearch\Core\urlHandler;
 
 function global_start()
 {
-    if (constant('THIS_SCRIPT') == 'memberlist.php') {
+    if (constant('THIS_SCRIPT') === 'memberlist.php') {
         global $templatelist;
 
         isset($templatelist) || $templatelist = '';
 
-        $templatelist .= ', ougccustomfsearch_field_text, ougccustomfsearch_field, ougccustomfsearch_field_select_option, ougccustomfsearch_field_select, ougccustomfsearch';
+        $templatelist .= ', ougccustomfsearch_field_text, ougccustomfsearch_field, ougccustomfsearch_field_select_option, ougccustomfsearch_field_select, ougccustomfsearch, ougccustomfsearch_groupsSelectOption, ougccustomfsearch_groupsSelect, ougccustomfsearch_field_checkbox, ougccustomfsearch_urlDescription';
     }
 }
 
@@ -442,7 +442,7 @@ function memberlist_intermediate(): bool
 
 function multipage(array &$paginationArguments): array
 {
-    if (THIS_SCRIPT !== 'memberlist.php') {
+    if (constant('THIS_SCRIPT') !== 'memberlist.php') {
         return $paginationArguments;
     }
 
