@@ -168,3 +168,128 @@ function urlHandlerBuild(array $urlAppend = [], bool $fetchImportUrl = false, bo
 
     return $PL->url_append(urlHandlerGet(), $urlAppend, '&amp;', $encode);
 }
+
+function cachedSearchClauseGet(string $uniqueIdentifier, bool $refreshUpdateStamp = false): string
+{
+    global $mybb;
+
+    static $searchResultsCache = null;
+
+    if ($searchResultsCache === null) {
+        $searchResultsCache = $mybb->cache->read('ougcCustomFieldsSearch');
+    }
+
+    if (isset($searchResultsCache[$uniqueIdentifier]) && ($searchResultsCache[$uniqueIdentifier]['timeStamp'] + getSetting(
+                'cacheIntervalSeconds'
+            ) > \TIME_NOW)) {
+        $queryClause = $searchResultsCache[$uniqueIdentifier]['queryClause'];
+
+        if ($refreshUpdateStamp) {
+            cachedSearchClauseUpdate($uniqueIdentifier);
+        }
+
+        return $queryClause;
+    }
+
+    return '';
+}
+
+function cachedSearchClausePut(string $uniqueIdentifier, string $queryClause): bool
+{
+    global $mybb;
+
+    static $searchResultsCache = null;
+
+    if ($searchResultsCache === null) {
+        $searchResultsCache = $mybb->cache->read('ougcCustomFieldsSearch');
+    }
+
+    if (!is_array($searchResultsCache)) {
+        $searchResultsCache = [];
+    }
+
+    if (!isset($searchResultsCache[$uniqueIdentifier])) {
+        $searchResultsCache[$uniqueIdentifier] = [];
+    }
+
+    $searchResultsCache[$uniqueIdentifier] = [
+        'timeStamp' => \TIME_NOW,
+        'queryClause' => $queryClause,
+    ];
+
+    $mybb->cache->update('ougcCustomFieldsSearch', $searchResultsCache);
+
+    return true;
+    // TODO, purge obsolete objects
+}
+
+function cachedSearchClauseUpdate(string $uniqueIdentifier, array $updateData = ['timeStamp' => \TIME_NOW]): bool
+{
+    global $mybb;
+
+    static $searchResultsCache = null;
+
+    if ($searchResultsCache === null) {
+        $searchResultsCache = $mybb->cache->read('ougcCustomFieldsSearch');
+    }
+
+    if (!is_array($searchResultsCache)) {
+        $searchResultsCache = [];
+    }
+
+    $updateCache = false;
+
+    if (isset($searchResultsCache[$uniqueIdentifier]['queryClause'])) {
+        $searchResultsCache[$uniqueIdentifier] = array_merge(
+            $searchResultsCache[$uniqueIdentifier],
+            $updateData
+        );
+
+        $updateCache = true;
+    } elseif (isset($searchResultsCache[$uniqueIdentifier])) {
+        unset($searchResultsCache[$uniqueIdentifier]);
+
+        $updateCache = true;
+    }
+
+    if ($updateCache) {
+        $mybb->cache->update('ougcCustomFieldsSearch', $searchResultsCache);
+    }
+
+    return $updateCache;
+}
+
+function cachedSearchClausesPurge(): bool
+{
+    global $mybb;
+
+    if (!($cacheIntervalSeconds = getSetting('cacheIntervalSeconds'))) {
+        return false;
+    }
+
+    static $searchResultsCache = null;
+
+    if ($searchResultsCache === null) {
+        $searchResultsCache = $mybb->cache->read('ougcCustomFieldsSearch');
+    }
+
+    $updateCache = false;
+
+    if (is_array($searchResultsCache)) {
+        foreach ($searchResultsCache as $uniqueIdentifier => $querySearchData) {
+            if (!($querySearchData['timeStamp'] + getSetting(
+                    'cacheIntervalSeconds'
+                ) > \TIME_NOW)) {
+                unset($searchResultsCache[$uniqueIdentifier]);
+
+                $updateCache = true;
+            }
+        }
+    }
+
+    if ($updateCache) {
+        $mybb->cache->update('ougcCustomFieldsSearch', $searchResultsCache);
+    }
+
+    return $updateCache;
+}

@@ -36,6 +36,8 @@ $l = [
     'setting_ougcCustomFieldsSearch_ignoredProfileFieldsIDs_desc' => 'Select which custom profile fields to ignore from the advanced search feature. Users will not be able to search by these selected fields.',
     'setting_ougcCustomFieldsSearch_bypassIgnoredProfileFields' => 'Bypass Disabled Profile Fields',
     'setting_ougcCustomFieldsSearch_bypassIgnoredProfileFields_desc' => 'Select which groups are allowed to bypass the above setting.',
+    'setting_ougcCustomFieldsSearch_cacheIntervalSeconds' => 'Cache Interval',
+    'setting_ougcCustomFieldsSearch_cacheIntervalSeconds_desc' => "Select the seconds search queries should be kept into the cache before being deleted. This is useful the most the change on users count, frequency of updates of custom profile fields, and search criteria remain constant. The larger the search criteria and users' data variations, it is recommended to keep this to a low seconds count.",
 
     'ougc_customfsearch_pluginlibrary' => 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or above, please upload this plugin to your forum and then try again.'
 ];

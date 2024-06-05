@@ -45,6 +45,8 @@ function global_start()
 
         $templatelist .= ', ougccustomfsearch_field_text, ougccustomfsearch_field, ougccustomfsearch_field_select_option, ougccustomfsearch_field_select, ougccustomfsearch, ougccustomfsearch_groupsSelectOption, ougccustomfsearch_groupsSelect, ougccustomfsearch_field_checkbox, ougccustomfsearch_urlDescription';
     }
+
+    \ougc\CustomFieldsSearch\Core\cachedSearchClausesPurge();
 }
 
 function memberlist_search()
@@ -240,10 +242,27 @@ function memberlist_search()
 
 function memberlist_start()
 {
-    memberlist_intermediate();
+    //memberlist_intermediate90();
+
+    control_db(
+        'function simple_select($table, $fields = "*", $conditions = "", $options = array())
+{
+    static $done = false;
+
+    if (!$done && $table == "users u" && $fields == "COUNT(*) AS users") {
+        global $db;
+
+        $table .= " LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)";
+
+        $done = true;
+    }
+
+    return parent::simple_select($table, $fields, $conditions, $options);
+}'
+    );
 }
 
-function memberlist_intermediate(): bool
+function memberlist_intermediate90(): bool
 {
     global $mybb, $db;
     global $ougcCustomFieldSearchFilters, $ougcCustomFieldSearchUrlDescription, $search_query, $ougcCustomFieldSearchUrl, $ougcCustomFieldSearchUrlParams;
@@ -434,22 +453,34 @@ function memberlist_intermediate(): bool
 
         $search_query .= " AND (({$whereClauses}))";
 
-        control_db(
-            'function simple_select($table, $fields = "*", $conditions = "", $options = array())
-{
-    static $done = false;
+        if (getSetting('cacheIntervalSeconds')) {
+            $uniqueIdentifier = md5($search_query);
 
-    if (!$done && $table == "users u" && $fields == "COUNT(*) AS users") {
-        global $db;
+            $cachedSearchClause = \ougc\CustomFieldsSearch\Core\cachedSearchClauseGet($uniqueIdentifier, true);
+        }
 
-        $table .= " LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)";
+        if (!empty($cachedSearchClause)) {
+            $search_query = $cachedSearchClause;
+        } else {
+            $dbQuery = $db->simple_select(
+                "users u LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)",
+                'u.uid',
+                "{$search_query}"
+            );
 
-        $done = true;
-    }
+            $userIDs = [];
 
-    return parent::simple_select($table, $fields, $conditions, $options);
-}'
-        );
+            while ($userIDs[] = (int)$db->fetch_field($dbQuery, 'uid')) {
+            }
+
+            $userIDs = implode("','", array_filter($userIDs));
+
+            $search_query = "u.uid IN ('{$userIDs}')";
+
+            if (!empty($uniqueIdentifier)) {
+                \ougc\CustomFieldsSearch\Core\cachedSearchClausePut($uniqueIdentifier, $search_query);
+            }
+        }
     }
 
     return true;

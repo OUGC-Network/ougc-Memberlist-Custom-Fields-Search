@@ -192,4 +192,6 @@ function _uninstall()
     }
 
     $cache->delete('ougc_customfsearch');
+
+    $cache->delete('ougcCustomFieldsSearch');
 }

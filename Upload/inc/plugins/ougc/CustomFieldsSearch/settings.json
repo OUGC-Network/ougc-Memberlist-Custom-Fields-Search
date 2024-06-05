@@ -6,5 +6,9 @@
   "bypassIgnoredProfileFields": {
     "optionscode": "groupselect",
     "value": 4
+  },
+  "cacheIntervalSeconds": {
+    "optionscode": "numeric",
+    "value": 600
   }
 }
