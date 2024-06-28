@@ -26,6 +26,8 @@
  * <https://ougc.network/eula.txt>.
  ****************************************************************************/
 
+declare(strict_types=1);
+
 // Die if IN_MYBB is not defined, for security reasons.
 use function ougc\CustomFieldsSearch\Admin\_activate;
 use function ougc\CustomFieldsSearch\Admin\_deactivate;
