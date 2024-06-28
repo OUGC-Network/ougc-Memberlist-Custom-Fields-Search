@@ -615,49 +615,66 @@ function xmlhttp(): bool
 
     $searchField = $mybb->get_input('searchField');
 
+    $dbFields = [];
+
+    $leftJoin = '';
+
     switch ($searchField) {
         case'username':
             if (mb_strpos(getSetting('searchFields'), 'username') !== false) {
                 $dbSearchField = 'u.username';
+
+                $filterField = 'username';
+
+                $dbFields[] = 'DISTINCT u.username';
             }
+            break;
         case'website':
             if (mb_strpos(getSetting('searchFields'), 'website') !== false) {
                 $dbSearchField = 'u.website';
+
+                $filterField = 'website';
+
+                $dbFields[] = 'DISTINCT u.website AS fieldUserName';
             }
             break;
+        default:
+            if (mb_strpos($searchField, 'fid') === 0) {
+                $fieldID = (int)str_replace('fid', '', $searchField);
+
+                $customFieldKey = "fid{$fieldID}";
+
+                $leftJoin = " LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)";
+
+                $dbSearchField = "f.{$customFieldKey}";
+
+                $dbFields[] = "DISTINCT f.{$customFieldKey}";
+
+                $filterField = $customFieldKey;
+            }
     }
-
-    $leftJoin = '';
-
-    if (mb_strpos($searchField, 'fid') === 0) {
-        $fieldID = (int)str_replace('fid', '', $searchField);
-
-        $customFieldKey = "fid{$fieldID}";
-
-        $leftJoin = " LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)";
-
-        $dbSearchField = "f.{$customFieldKey}";
-    }
-
-    $dbQuery = $db->simple_select(
-        'users u' . $leftJoin,
-        'u.uid, u.username',
-        "LOWER({$dbSearchField}) LIKE '%{$db->escape_string_like(mb_strtolower($mybb->input['query']))}%'",
-        [
-            'order_by' => 'u.username',
-            'order_dir' => 'asc',
-            'limit_start' => 0,
-            'limit' => 15
-        ]
-    );
 
     $returnObjects = [];
 
-    while ($perkData = $db->fetch_array($dbQuery)) {
-        $returnObjects[] = [
-            'id' => $perkData['username'],
-            'text' => $perkData['username']
-        ];
+    if (isset($dbSearchField)) {
+        $dbQuery = $db->simple_select(
+            'users u' . $leftJoin,
+            implode(',', $dbFields),
+            "LOWER({$dbSearchField}) LIKE '%{$db->escape_string_like(mb_strtolower($mybb->input['query']))}%'",
+            [
+                'order_by' => 'u.username',
+                'order_dir' => 'asc',
+                'limit_start' => 0,
+                'limit' => 15
+            ]
+        );
+
+        while ($perkData = $db->fetch_array($dbQuery)) {
+            $returnObjects[] = [
+                'id' => $perkData[$filterField],
+                'text' => $perkData[$filterField]
+            ];
+        }
     }
 
     echo json_encode($returnObjects);
