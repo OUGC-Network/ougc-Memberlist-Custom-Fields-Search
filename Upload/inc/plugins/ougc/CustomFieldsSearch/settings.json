@@ -10,5 +10,21 @@
   "cacheIntervalSeconds": {
     "optionscode": "numeric",
     "value": 600
+  },
+  "enableGlobalSearch": {
+    "optionscode": "yesno",
+    "value": 0
+  },
+  "searchFields": {
+    "optionscode": "checkbox",
+    "options": [
+      "username",
+      "website"
+    ],
+    "value": "username"
+  },
+  "searchCustomFields": {
+    "optionscode": "text",
+    "value": -1
   }
 }

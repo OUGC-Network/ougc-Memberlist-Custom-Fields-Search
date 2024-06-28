@@ -26,6 +26,8 @@
  * <https://ougc.network/eula.txt>.
  ****************************************************************************/
 
+declare(strict_types=1);
+
 namespace ougc\CustomFieldsSearch\Admin;
 
 use DirectoryIterator;
@@ -64,16 +66,6 @@ function _activate()
 
     load_pluginlibrary();
 
-    /*$PL->settings('ougc_customfsearch', $lang->setting_group_ougc_customfsearch, $lang->setting_group_ougc_customfsearch_desc, array(
-        'forums'				=> array(
-           'title'			=> $lang->setting_ougc_customfsearch_forums,
-           'description'	=> $lang->setting_ougc_customfsearch_forums_desc,
-           'optionscode'	=> 'forumselect',
-           'value'			=> -1
-        ),
-    ));*/
-
-    // Add settings group
     $settingsContents = file_get_contents(ROOT . '/settings.json');
 
     $settingsData = json_decode($settingsContents, true);
@@ -100,7 +92,6 @@ function _activate()
         $settingsData
     );
 
-    // Add templates
     $templatesDirIterator = new DirectoryIterator(ROOT . '/templates');
 
     $templates = [];

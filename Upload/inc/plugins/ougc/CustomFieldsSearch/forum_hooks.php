@@ -26,6 +26,8 @@
  * <https://ougc.network/eula.txt>.
  ****************************************************************************/
 
+declare(strict_types=1);
+
 namespace ougc\CustomFieldsSearch\Hooks\Forum;
 
 use MyBB;
@@ -52,11 +54,7 @@ function global_start()
 function memberlist_search()
 {
     global $templates, $lang, $mybb;
-    global $ougc_customfsearch, $ougcCustomFieldSearchFilters, $errors, $user;
-
-    $mybb->input['customSearchFields'] = $mybb->get_input('customSearchFields', MyBB::INPUT_ARRAY);
-
-    $mybb->input['customSearchGroups'] = $mybb->get_input('customSearchGroups', MyBB::INPUT_ARRAY);
+    global $ougc_customfsearch, $ougcCustomFieldSearchFilters, $errors;
 
     load_language();
 
@@ -106,7 +104,7 @@ function memberlist_search()
         foreach ($customFieldsCache as $customFieldData) {
             if (!is_member(
                     $customFieldData['viewableby']
-                ) || (isset($ignoredProfileFieldsIDs[$customFieldData['fid']]) && !is_member(
+                ) || ((isset($ignoredProfileFieldsIDs[$customFieldData['fid']]) || isset($ignoredProfileFieldsIDs[-1])) && !is_member(
                         getSetting('bypassIgnoredProfileFields')
                     ))) {
                 continue;
@@ -118,7 +116,7 @@ function memberlist_search()
 
             $customFieldData['description'] = htmlspecialchars_uni($customFieldData['description']);
 
-            $fieldTypeValues = explode("\n", $customFieldData['type'], '2');
+            $fieldTypeValues = explode("\n", $customFieldData['type'], 2);
 
             $fieldType = $fieldTypeValues[0] ?? '';
 
@@ -128,14 +126,14 @@ function memberlist_search()
 
             $selectOptions = '';
 
-            if ($errors) {
+            $userFieldValue = '';
+
+            if (!empty($errors)) {
                 if (!isset($mybb->input['customSearchFields'][$customFieldKey])) {
                     $mybb->input['customSearchFields'][$customFieldKey] = '';
                 }
 
                 $userFieldValue = $mybb->input['customSearchFields'][$customFieldKey];
-            } else {
-                $userFieldValue = $user[$customFieldKey];
             }
 
             if (in_array($fieldType, ['multiselect', 'select', 'radio', 'checkbox'])) {
@@ -159,7 +157,7 @@ function memberlist_search()
 
                 $searchTypeCheckedDoesNotHave = '';
 
-                if ($searchTypeFields[$customFieldKey] === 'doesNotHave') {
+                if (isset($searchTypeFields[$customFieldKey]) && $searchTypeFields[$customFieldKey] === 'doesNotHave') {
                     $searchTypeCheckedExactly = '';
 
                     $searchTypeCheckedDoesNotHave = 'checked="checked"';
@@ -196,7 +194,7 @@ function memberlist_search()
                 $inputField = eval(getTemplate('field_checkbox'));
             } else {
                 //text, textarea
-                $filterValue = htmlspecialchars_uni($ougcCustomFieldSearchFilters[$customFieldKey]);
+                $filterValue = htmlspecialchars_uni($ougcCustomFieldSearchFilters[$customFieldKey] ?? '');
 
                 $maxLength = '';
 
@@ -206,9 +204,9 @@ function memberlist_search()
 
                 $searchTypeCheckedMatches = $searchTypeCheckedDoesNotMatch = '';
 
-                if ($searchTypeFields[$customFieldKey] === 'has') {
+                if (isset($searchTypeFields[$customFieldKey]) && $searchTypeFields[$customFieldKey] === 'has') {
                     $searchTypeCheckedMatches = 'checked="checked"';
-                } elseif ($searchTypeFields[$customFieldKey] === 'doesNotMatch') {
+                } elseif (isset($searchTypeFields[$customFieldKey]) && $searchTypeFields[$customFieldKey] === 'doesNotMatch') {
                     $searchTypeCheckedDoesNotMatch = 'checked="checked"';
                 }
 
@@ -242,7 +240,42 @@ function memberlist_search()
 
 function memberlist_start()
 {
+    global $mybb;
     //memberlist_intermediate90();
+
+    $mybb->input['customSearchFields'] = $mybb->get_input('customSearchFields', MyBB::INPUT_ARRAY);
+
+    $mybb->input['customSearchGroups'] = $mybb->get_input('customSearchGroups', MyBB::INPUT_ARRAY);
+
+    if (isset($mybb->input['doCustomFieldsSearchGlobal'])) {
+        $searchField = $mybb->get_input('searchField');
+
+        switch ($searchField) {
+            case'username':
+                if (mb_strpos(getSetting('searchFields'), 'username') !== false) {
+                    $mybb->input['username'] = $mybb->get_input('keyword');
+                    $mybb->input['sort'] = 'username';
+                }
+            case'website':
+                if (mb_strpos(getSetting('searchFields'), 'website') !== false) {
+                    $mybb->input['website'] = $mybb->get_input('keyword');
+                    $mybb->input['sort'] = 'website';
+                }
+                break;
+        }
+
+        if (mb_strpos($searchField, 'fid') === 0) {
+            $fieldID = (int)str_replace('fid', '', $searchField);
+
+            $customFieldKey = "fid{$fieldID}";
+
+            $mybb->input['customSearchFields'][$customFieldKey] = $mybb->get_input('keyword');
+
+            $mybb->input['searchTypeField'][$customFieldKey] = 'matches';
+
+            $mybb->input['sort'] = 'username';
+        }
+    }
 
     control_db(
         'function simple_select($table, $fields = "*", $conditions = "", $options = array())
@@ -338,13 +371,13 @@ function memberlist_intermediate90(): bool
 
         if (!is_member(
                 $customFieldData['viewableby']
-            ) || (isset($ignoredProfileFieldsIDs[$customFieldData['fid']]) && !is_member(
+            ) || ((isset($ignoredProfileFieldsIDs[$customFieldData['fid']]) || isset($ignoredProfileFieldsIDs[-1])) && !is_member(
                     getSetting('bypassIgnoredProfileFields')
                 ))) {
             continue;
         }
 
-        $fieldTypeValues = explode("\n", $customFieldData['type'], '2');
+        $fieldTypeValues = explode("\n", $customFieldData['type'], 2);
 
         $fieldType = $fieldTypeValues[0] ?? '';
 
@@ -409,6 +442,7 @@ function memberlist_intermediate90(): bool
             $whereClauses[$customFieldKey] = "LOWER(f.{$customFieldKey}) {$comparisonOperator} '%{$db->escape_string_like(my_strtolower($filterValue))}%'";
         }
     }
+    //_dump(123, $ougcCustomFieldSearchUrlParams);
 
     if ($whereClauses) {
         global $lang;
@@ -451,7 +485,9 @@ function memberlist_intermediate90(): bool
 
         $ougcCustomFieldSearchUrlDescription = eval(getTemplate('urlDescription'));
 
-        $search_query .= " AND (({$whereClauses}))";
+        if ($whereClauses) {
+            $search_query .= " AND (({$whereClauses}))";
+        }
 
         if (getSetting('cacheIntervalSeconds')) {
             $uniqueIdentifier = md5($search_query);
@@ -503,4 +539,52 @@ function multipage(array &$paginationArguments): array
     $paginationArguments['url'] = urlHandlerBuild($ougcCustomFieldSearchUrlParams);
 
     return $paginationArguments;
+}
+
+function pre_output_page(string $pageContents): string
+{
+    if (mb_strpos($pageContents, '<!--OUGC_MEMBERLISTSEARCH-->') === false) {
+        return $pageContents;
+    }
+
+    global $theme, $lang, $cache;
+
+    load_language();
+
+    $searchFieldOptions = '';
+
+    foreach (explode(',', getSetting('searchFields')) as $searchField) {
+        $optionValue = $searchField;
+
+        $optionSelect = '';
+
+        $fieldKey = ucfirst($searchField);
+
+        $optionName = $lang->{"ougc_customfsearch_globalSearchFormFieldName{$fieldKey}"};
+
+        $searchFieldOptions .= eval(getTemplate('globalSearchFormSelectOption'));
+    }
+
+    foreach ($cache->read('profilefields') as $profileField) {
+        $fieldID = (int)$profileField['fid'];
+
+        if (!is_member(getSetting('searchCustomFields'), ['usergroup' => $fieldID, 'additionalgroups' => ''])) {
+            continue;
+        }
+
+        $optionValue = "fid{$fieldID}";
+
+        //$optionValue = "customSearchFields[{$customFieldKey}]";
+
+        $optionSelect = '';
+
+        $optionName = htmlspecialchars_uni($profileField['name']);
+        $searchFieldOptions .= eval(getTemplate('globalSearchFormSelectOption'));
+    }
+
+    $searchForm = eval(getTemplate('globalSearchForm'));
+
+    $pageContents = str_replace('<!--OUGC_MEMBERLISTSEARCH-->', $searchForm, $pageContents);
+
+    return $pageContents;
 }

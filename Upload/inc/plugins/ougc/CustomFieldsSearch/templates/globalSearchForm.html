@@ -1,0 +1,30 @@
+<form action="memberlist.php" method="post">
+    <input type="hidden" name="action" value="do_search"/>
+    <input type="hidden" name="doCustomFieldsSearch" value="1"/>
+    <input type="hidden" name="doCustomFieldsSearchGlobal" value="1"/>
+    <input type="hidden" name="username_match" value="contains"/>
+    <input type="hidden" name="order" value="descending"/>
+    <input type="hidden" name="perpage" value="15"/>
+    <input type="hidden" name="searchGroups" value="both"/>
+    <input type="hidden" name="customSearchGroups[]" value="-1"/>
+    <input type="hidden" name="searchType" value="strict"/>
+    <table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="tborder">
+        <tr>
+            <td class="thead" colspan="2"><strong>{$lang->ougc_customfsearch_globalSearchFormTitle}</strong></td>
+        </tr>
+        <tr>
+            <td class="trow1" width="50%">
+                <input type="text" class="textbox" name="keyword" id="keyword"/>
+            </td>
+            <td class="trow1" width="50%">
+                <select name="searchField">
+                    {$searchFieldOptions}
+                </select>
+            </td>
+        </tr>
+    </table>
+    <br class="clear"/>
+    <div align="center"><input type="submit" class="button" name="submit"
+                               value="{$lang->ougc_customfsearch_globalSearchFormButton}"/></div>
+</form>
+<br class="clear"/>

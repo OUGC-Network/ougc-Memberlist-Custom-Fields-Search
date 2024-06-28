@@ -83,16 +83,25 @@ function admin_formcontainer_output_row(array $rowArguments): array
 
     \ougc\CustomFieldsSearch\Core\load_language();
 
-    if (empty($rowArguments['title']) || $rowArguments['title'] !== $lang->setting_ougcCustomFieldsSearch_ignoredProfileFieldsIDs) {
+    if (!(
+        !empty($rowArguments['title']) &&
+        (
+            $rowArguments['title'] === $lang->setting_ougcCustomFieldsSearch_ignoredProfileFieldsIDs ||
+            $rowArguments['title'] === $lang->setting_ougcCustomFieldsSearch_searchCustomFields
+        )
+    )) {
         return $rowArguments;
     }
 
     global $db, $form;
-    global $element_name, $option_list, $setting, $element_id;
+    global $setting, $element_id;
 
     $dbQuery = $db->simple_select('profilefields', '*', '', ['order_by' => 'name, disporder']);
 
-    $profileFieldsObjects = [];
+    $profileFieldsObjects = [
+        -1 => $lang->ougc_customfsearch_allCustomFields,
+        0 => '----------'
+    ];
 
     while ($profileFieldData = $db->fetch_array($dbQuery)) {
         $profileFieldsObjects[(int)$profileFieldData['fid']] = htmlspecialchars_uni($profileFieldData['name']);
@@ -112,20 +121,35 @@ function admin_config_settings_change_commit()
 {
     global $mybb;
 
-    if (!isset($mybb->input['select']) || !isset($mybb->input['select']['ougcCustomFieldsSearch_ignoredProfileFieldsIDs'])) {
+    if (!isset($mybb->input['select'])) {
         return;
     }
 
     global $db;
 
-    $profileFieldsIDs = implode(
-        ',',
-        array_map('intval', $mybb->input['select']['ougcCustomFieldsSearch_ignoredProfileFieldsIDs'])
-    );
+    if (isset($mybb->input['select']['ougcCustomFieldsSearch_ignoredProfileFieldsIDs'])) {
+        $profileFieldsIDs = implode(
+            ',',
+            array_filter(array_map('intval', $mybb->input['select']['ougcCustomFieldsSearch_ignoredProfileFieldsIDs']))
+        );
 
-    $db->update_query(
-        'settings',
-        ['value' => $db->escape_string($profileFieldsIDs)],
-        "name='ougcCustomFieldsSearch_ignoredProfileFieldsIDs'"
-    );
+        $db->update_query(
+            'settings',
+            ['value' => $db->escape_string($profileFieldsIDs)],
+            "name='ougcCustomFieldsSearch_ignoredProfileFieldsIDs'"
+        );
+    }
+
+    if (isset($mybb->input['select']['ougcCustomFieldsSearch_searchCustomFields'])) {
+        $profileFieldsIDs = implode(
+            ',',
+            array_filter(array_map('intval', $mybb->input['select']['ougcCustomFieldsSearch_searchCustomFields']))
+        );
+
+        $db->update_query(
+            'settings',
+            ['value' => $db->escape_string($profileFieldsIDs)],
+            "name='ougcCustomFieldsSearch_searchCustomFields'"
+        );
+    }
 }

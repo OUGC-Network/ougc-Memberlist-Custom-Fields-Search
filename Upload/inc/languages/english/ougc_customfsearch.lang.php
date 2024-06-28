@@ -57,6 +57,11 @@ $l = [
     'ougc_customfsearch_formFieldTypeLike' => 'LIKE',
     'ougc_customfsearch_formFieldTypeNotLike' => 'NOT LIKE',
 
+    'ougc_customfsearch_globalSearchFormTitle' => 'Search Users',
+    'ougc_customfsearch_globalSearchFormButton' => 'Search Users',
+    'ougc_customfsearch_globalSearchFormFieldNameUsername' => 'Username',
+    'ougc_customfsearch_globalSearchFormFieldNameWebsite' => 'Website',
+
     'ougc_customfsearch_urlDescriptionText' => 'Use the following link to share this filtered member list',
     //PLUGINLIBRARY
 ];
