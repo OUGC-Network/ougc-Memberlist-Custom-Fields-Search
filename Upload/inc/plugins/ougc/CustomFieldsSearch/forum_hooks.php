@@ -588,3 +588,79 @@ function pre_output_page(string $pageContents): string
 
     return $pageContents;
 }
+
+function xmlhttp(): bool
+{
+    global $mybb;
+
+    if ($mybb->get_input('action') !== 'ougcCustomFieldsSearch') {
+        return false;
+    }
+
+    $mybb->input['query'] = ltrim($mybb->get_input('query'));
+
+    if (my_strlen($mybb->input['query']) < 2) {
+        return false;
+    }
+
+    global $db, $lang;
+
+    if ($lang->settings['charset']) {
+        $charset = $lang->settings['charset'];
+    } else {
+        $charset = 'UTF-8';
+    }
+
+    header("Content-type: application/json; charset={$charset}");
+
+    $searchField = $mybb->get_input('searchField');
+
+    switch ($searchField) {
+        case'username':
+            if (mb_strpos(getSetting('searchFields'), 'username') !== false) {
+                $dbSearchField = 'u.username';
+            }
+        case'website':
+            if (mb_strpos(getSetting('searchFields'), 'website') !== false) {
+                $dbSearchField = 'u.website';
+            }
+            break;
+    }
+
+    $leftJoin = '';
+
+    if (mb_strpos($searchField, 'fid') === 0) {
+        $fieldID = (int)str_replace('fid', '', $searchField);
+
+        $customFieldKey = "fid{$fieldID}";
+
+        $leftJoin = " LEFT JOIN {$db->table_prefix}userfields f ON (f.ufid=u.uid)";
+
+        $dbSearchField = "f.{$customFieldKey}";
+    }
+
+    $dbQuery = $db->simple_select(
+        'users u' . $leftJoin,
+        'u.uid, u.username',
+        "LOWER({$dbSearchField}) LIKE '%{$db->escape_string_like(mb_strtolower($mybb->input['query']))}%'",
+        [
+            'order_by' => 'u.username',
+            'order_dir' => 'asc',
+            'limit_start' => 0,
+            'limit' => 15
+        ]
+    );
+
+    $returnObjects = [];
+
+    while ($perkData = $db->fetch_array($dbQuery)) {
+        $returnObjects[] = [
+            'id' => $perkData['username'],
+            'text' => $perkData['username']
+        ];
+    }
+
+    echo json_encode($returnObjects);
+
+    return true;
+}
