@@ -63,5 +63,11 @@ $l = [
     'ougcCustomFieldsSearchCanViewProfilesGroupIDs' => 'Can View Selected Groups Profiles',
     'ougcCustomFieldsSearchCanViewProfilesGroupIDsDescription' => 'Select the user groups that users in this groups are allowed to view profiles from. Select none for all groups.',
 
+    'ougcCustomFieldsSearchProfilePrivacyTitle' => 'Profile Privacy',
+    'ougcCustomFieldsSearchProfilePrivacyBuddyList' => 'Allow only users from my buddy list.',
+    'ougcCustomFieldsSearchProfilePrivacyIgnoreList' => 'Block users from my ignore list.',
+    'ougcCustomFieldsSearchProfilePrivacyGuests' => 'Block guests or unregistered users.',
+    'ougcCustomFieldsSearchProfilePrivacyUsers' => 'Block registered users.',
+
     'ougc_customfsearch_pluginlibrary' => 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or above, please upload this plugin to your forum and then try again.'
 ];

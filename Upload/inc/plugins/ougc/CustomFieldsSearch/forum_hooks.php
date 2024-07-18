@@ -63,17 +63,22 @@ function global_start()
     cachedSearchClausesPurge();
 }
 
-function usercp_profile_end(): bool
+function usercp_profile_end($userData = []): bool
 {
+    global $mybb;
     global $ougcCustomFieldsSearchProfilePrivacyInput;
 
     $ougcCustomFieldsSearchProfilePrivacyInput = '';
 
-    if (!is_member(getSetting('groupsCanManageProfilePrivacy'))) {
+    if (!is_array($userData)) {
+        $userData = $mybb->user;
+    }
+
+    if (!is_member(getSetting('groupsCanManageProfilePrivacy'), $userData)) {
         return false;
     }
 
-    global $mybb, $lang;
+    global $lang;
 
     load_language();
 
@@ -85,7 +90,7 @@ function usercp_profile_end(): bool
         );
     } else {
         $privacySettings = array_flip(
-            sanitizeIntegers(explode(',', $mybb->user['ougcCustomFieldsSearchProfilePrivacy']))
+            sanitizeIntegers(explode(',', $userData['ougcCustomFieldsSearchProfilePrivacy']))
         );
     }
 
@@ -98,12 +103,19 @@ function usercp_profile_end(): bool
             $checkedElement = ' checked="checked"';
         }
 
-        //_dump($privacySettings, $privacyType, isset($privacySettings[$privacyType]));
-
         $privacyItemRows .= eval(getTemplate('controlPanelProfilePrivacyRow'));
     }
 
     $ougcCustomFieldsSearchProfilePrivacyInput = eval(getTemplate('controlPanelProfilePrivacy'));
+
+    return true;
+}
+
+function modcp_editprofile_end(): bool
+{
+    global $user;
+
+    usercp_profile_end($user);
 
     return true;
 }
@@ -113,7 +125,7 @@ function datahandler_user_update(UserDataHandler $userDataHandler): UserDataHand
     global $mybb;
 
     if (!isset($mybb->input['ougcCustomFieldsSearchProfilePrivacyInput'])) {
-        return $userDataHandler;
+        //return $userDataHandler;
     }
 
     global $db;

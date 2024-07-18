@@ -30,9 +30,12 @@ declare(strict_types=1);
 
 namespace ougc\CustomFieldsSearch\Hooks\Admin;
 
+use FormContainer;
 use MyBB;
 
+use function ougc\CustomFieldsSearch\Core\getTemplate;
 use function ougc\CustomFieldsSearch\Core\load_language;
+use function ougc\CustomFieldsSearch\Core\profilePrivacyTypes;
 use function ougc\CustomFieldsSearch\Core\sanitizeIntegers;
 
 use const ougc\CustomFieldsSearch\Core\FIELDS_DATA;
@@ -219,4 +222,44 @@ function admin_user_groups_edit_commit()
             $updated_group[$fieldName] = $mybb->get_input($fieldName, MyBB::INPUT_INT);
         }
     }
+}
+
+function admin_user_users_edit_profile()
+{
+    global $mybb, $lang;
+    global $form, $user;
+
+    $form_container = new FormContainer($lang->ougcCustomFieldsSearchProfilePrivacyTitle);
+
+    $privacyItemRows = [];
+
+    if ($mybb->request_method === 'post') {
+        $privacySettings = sanitizeIntegers(
+            $mybb->get_input('ougcCustomFieldsSearchProfilePrivacyInput', MyBB::INPUT_ARRAY)
+        );
+    } else {
+        $privacySettings = array_flip(
+            sanitizeIntegers(explode(',', $user['ougcCustomFieldsSearchProfilePrivacy']))
+        );
+    }
+
+    foreach (profilePrivacyTypes() as $privacyType => $privacyKey) {
+        $privacyItemRows[] = $form->generate_check_box(
+            "ougcCustomFieldsSearchProfilePrivacyInput[{$privacyType}]",
+            1,
+            $lang->{"ougcCustomFieldsSearchProfilePrivacy{$privacyKey}"},
+            ['checked' => isset($privacySettings[$privacyType])]
+        );
+    }
+
+    $form_container->output_row(
+        $lang->ougcCustomFieldsSearchProfilePrivacyTitle,
+        '',
+        "<div class=\"user_settings_bit\">" . implode(
+            "</div><div class=\"user_settings_bit\">",
+            $privacyItemRows
+        ) . '</div>'
+    );
+
+    $form_container->end();
 }

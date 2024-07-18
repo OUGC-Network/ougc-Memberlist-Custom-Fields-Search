@@ -102,6 +102,8 @@ The following template edits are required for this plugin to work.
 
 1. Insert `<!--OUGC_MEMBERLISTSEARCH-->` after `{$welcome}` inside the `portal` template.
 2. Insert `{$ougcCustomFieldsSearchProfilePrivacyInput}` after `{$awaysection}` inside the `usercp_profile` template.
+3. Insert `{$ougcCustomFieldsSearchProfilePrivacyInput}` after `{$awaysection}` inside the `modcp_editprofile`
+   template.
 
 [Go up to Table of Contents](#table_of_contents)
 
