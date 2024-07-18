@@ -32,15 +32,23 @@ namespace ougc\CustomFieldsSearch\Hooks\Forum;
 
 use MyBB;
 
+use UserDataHandler;
+
 use function ougc\CustomFieldsSearch\Core\cachedSearchClauseGet;
 use function ougc\CustomFieldsSearch\Core\cachedSearchClausePut;
 use function ougc\CustomFieldsSearch\Core\cachedSearchClausesPurge;
 use function ougc\CustomFieldsSearch\Core\getSetting;
 use function ougc\CustomFieldsSearch\Core\getTemplate;
+use function ougc\CustomFieldsSearch\Core\profilePrivacyTypes;
 use function ougc\CustomFieldsSearch\Core\sanitizeIntegers;
 use function ougc\CustomFieldsSearch\Core\urlHandlerBuild;
 use function ougc\CustomFieldsSearch\Core\load_language;
 use function ougc\CustomFieldsSearch\Core\urlHandler;
+
+use const ougc\CustomFieldsSearch\Core\PRIVACY_TYPE_BLOCK_GUESTS;
+use const ougc\CustomFieldsSearch\Core\PRIVACY_TYPE_BLOCK_IGNORE_LIST;
+use const ougc\CustomFieldsSearch\Core\PRIVACY_TYPE_BLOCK_USERS;
+use const ougc\CustomFieldsSearch\Core\PRIVACY_TYPE_ONLY_BUDDY_LIST;
 
 function global_start()
 {
@@ -53,6 +61,134 @@ function global_start()
     }
 
     cachedSearchClausesPurge();
+}
+
+function usercp_profile_end(): bool
+{
+    global $ougcCustomFieldsSearchProfilePrivacyInput;
+
+    $ougcCustomFieldsSearchProfilePrivacyInput = '';
+
+    if (!is_member(getSetting('groupsCanManageProfilePrivacy'))) {
+        return false;
+    }
+
+    global $mybb, $lang;
+
+    load_language();
+
+    $privacyItemRows = '';
+
+    if ($mybb->request_method === 'post') {
+        $privacySettings = sanitizeIntegers(
+            $mybb->get_input('ougcCustomFieldsSearchProfilePrivacyInput', MyBB::INPUT_ARRAY)
+        );
+    } else {
+        $privacySettings = array_flip(
+            sanitizeIntegers(explode(',', $mybb->user['ougcCustomFieldsSearchProfilePrivacy']))
+        );
+    }
+
+    foreach (profilePrivacyTypes() as $privacyType => $privacyKey) {
+        $langString = $lang->{"ougcCustomFieldsSearchProfilePrivacy{$privacyKey}"};
+
+        $checkedElement = '';
+
+        if (isset($privacySettings[$privacyType])) {
+            $checkedElement = ' checked="checked"';
+        }
+
+        //_dump($privacySettings, $privacyType, isset($privacySettings[$privacyType]));
+
+        $privacyItemRows .= eval(getTemplate('controlPanelProfilePrivacyRow'));
+    }
+
+    $ougcCustomFieldsSearchProfilePrivacyInput = eval(getTemplate('controlPanelProfilePrivacy'));
+
+    return true;
+}
+
+function datahandler_user_update(UserDataHandler $userDataHandler): UserDataHandler
+{
+    global $mybb;
+
+    if (!isset($mybb->input['ougcCustomFieldsSearchProfilePrivacyInput'])) {
+        return $userDataHandler;
+    }
+
+    global $db;
+
+    $privacySettings = $mybb->get_input('ougcCustomFieldsSearchProfilePrivacyInput', MyBB::INPUT_ARRAY);
+
+    $privacySettings = $db->escape_string(implode(',', sanitizeIntegers(array_keys($privacySettings))));
+
+    $userDataHandler->user_update_data['ougcCustomFieldsSearchProfilePrivacy'] = $privacySettings;
+
+    return $userDataHandler;
+}
+
+function member_profile_start(): bool
+{
+    global $memprofile;
+
+    require_once MYBB_ROOT . 'inc/functions_modcp.php';
+
+    if (modcp_can_manage_user($memprofile['uid'])) {
+        return false;
+    }
+
+    global $mybb;
+
+    $allowedGroupsToSearch = sanitizeIntegers(
+        explode(',', (string)$mybb->usergroup['ougcCustomFieldsSearchCanViewProfilesGroupIDs'])
+    );
+
+    global $lang;
+
+    if ($allowedGroupsToSearch && !is_member($allowedGroupsToSearch, $memprofile)) {
+        error($lang->error_nomember);
+    }
+
+    $currentUserID = (int)$mybb->user['uid'];
+
+    if (!is_member(
+            getSetting('groupsCanManageProfilePrivacy'),
+            $memprofile
+        ) || $currentUserID === (int)$memprofile['uid'] || empty($memprofile['ougcCustomFieldsSearchProfilePrivacy'])) {
+        return false;
+    }
+
+    $userPrivacySettings = array_flip(
+        sanitizeIntegers(explode(',', (string)$memprofile['ougcCustomFieldsSearchProfilePrivacy']))
+    );
+
+    $enabledProfilePrivacyTypes = profilePrivacyTypes();
+
+    if (isset($userPrivacySettings[PRIVACY_TYPE_ONLY_BUDDY_LIST]) && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_ONLY_BUDDY_LIST])) {
+        if (!in_array($currentUserID, sanitizeIntegers(explode(',', $memprofile['buddylist'])))) {
+            error($lang->error_nomember);
+        }
+    }
+
+    if (isset($userPrivacySettings[PRIVACY_TYPE_BLOCK_IGNORE_LIST]) && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_BLOCK_IGNORE_LIST])) {
+        if (in_array($currentUserID, sanitizeIntegers(explode(',', $memprofile['ignorelist'])))) {
+            error($lang->error_nomember);
+        }
+    }
+
+    if (isset($userPrivacySettings[PRIVACY_TYPE_BLOCK_GUESTS]) && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_BLOCK_GUESTS])) {
+        if (!$currentUserID) {
+            error($lang->error_nomember);
+        }
+    }
+
+    if (isset($userPrivacySettings[PRIVACY_TYPE_BLOCK_USERS]) && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_BLOCK_USERS])) {
+        if ($currentUserID) {
+            error($lang->error_nomember);
+        }
+    }
+
+    return true;
 }
 
 function memberlist_search()
@@ -314,7 +450,7 @@ function memberlist_intermediate90(): bool
     $ougcCustomFieldSearchUrlDescription = '';
 
     $allowedGroupsToSearch = sanitizeIntegers(
-        explode(',', $mybb->usergroup['ougcCustomFieldsSearchCanSearchGroupIDs'])
+        explode(',', (string)$mybb->usergroup['ougcCustomFieldsSearchCanSearchGroupIDs'])
     );
 
     if ($allowedGroupsToSearch) {
@@ -332,8 +468,6 @@ function memberlist_intermediate90(): bool
                     $whereClausesGroups[] = "CONCAT(',',u.additionalgroups,',') LIKE '%,{$groupID},%'";
                     break;
             }
-
-            $ougcCustomFieldSearchUrlParams["customSearchGroups[{$groupID}]"] = $groupID;
         }
 
         $whereClausesGroups = implode(' OR ', $whereClausesGroups);
@@ -341,6 +475,122 @@ function memberlist_intermediate90(): bool
         if ($whereClausesGroups) {
             $search_query .= " AND ({$whereClausesGroups})";
         }
+    }
+
+    $whereClauses = [];
+
+    $allowedGroupsManagePrivacy = sanitizeIntegers(
+        explode(',', (string)getSetting('groupsCanManageProfilePrivacy'))
+    );
+
+    $currentUserID = (int)$mybb->user['uid'];
+
+    $enabledProfilePrivacyTypes = profilePrivacyTypes();
+
+    if ($allowedGroupsManagePrivacy && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_ONLY_BUDDY_LIST])) {
+        $profilePrivacySettingClause = '';
+
+        $privacyTypeValue = PRIVACY_TYPE_ONLY_BUDDY_LIST;
+
+        switch ($db->type) {
+            case 'pgsql':
+            case 'sqlite':
+                $profilePrivacySettingClause .= "','||u.ougcCustomFieldsSearchProfilePrivacy||',' NOT LIKE '%,{$privacyTypeValue},%'";
+                break;
+            default:
+                $profilePrivacySettingClause .= "CONCAT(',',u.ougcCustomFieldsSearchProfilePrivacy,',') NOT LIKE '%,{$privacyTypeValue},%'";
+                break;
+        }
+
+        $profilePrivacySettingClause .= " OR u.uid='{$currentUserID}' OR ";
+
+        switch ($db->type) {
+            case 'pgsql':
+            case 'sqlite':
+                $profilePrivacySettingClause .= "(','||u.ougcCustomFieldsSearchProfilePrivacy||',' LIKE '%,{$privacyTypeValue},%' AND ','||u.buddylist||',' LIKE '%,{$currentUserID},%')";
+                break;
+            default:
+                $profilePrivacySettingClause .= "(CONCAT(',',u.ougcCustomFieldsSearchProfilePrivacy,',') LIKE '%,{$privacyTypeValue},%' AND CONCAT(',',u.buddylist,',') LIKE '%,{$currentUserID},%')";
+                break;
+        }
+
+        $whereClauses[] = "({$profilePrivacySettingClause})";
+    }
+
+    if ($allowedGroupsManagePrivacy && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_BLOCK_IGNORE_LIST])) {
+        $profilePrivacySettingClause = '';
+
+        $privacyTypeValue = PRIVACY_TYPE_BLOCK_IGNORE_LIST;
+
+        switch ($db->type) {
+            case 'pgsql':
+            case 'sqlite':
+                $profilePrivacySettingClause .= "','||u.ougcCustomFieldsSearchProfilePrivacy||',' NOT LIKE '%,{$privacyTypeValue},%'";
+                break;
+            default:
+                $profilePrivacySettingClause .= "CONCAT(',',u.ougcCustomFieldsSearchProfilePrivacy,',') NOT LIKE '%,{$privacyTypeValue},%'";
+                break;
+        }
+
+        $profilePrivacySettingClause .= " OR u.uid='{$currentUserID}' OR ";
+
+        switch ($db->type) {
+            case 'pgsql':
+            case 'sqlite':
+                $profilePrivacySettingClause .= "(','||u.ougcCustomFieldsSearchProfilePrivacy||',' LIKE '%,{$privacyTypeValue},%' AND ','||u.ignorelist||',' NOT LIKE '%,{$currentUserID},%')";
+                break;
+            default:
+                $profilePrivacySettingClause .= "(CONCAT(',',u.ougcCustomFieldsSearchProfilePrivacy,',') LIKE '%,{$privacyTypeValue},%' AND CONCAT(',',u.ignorelist,',') NOT LIKE '%,{$currentUserID},%')";
+                break;
+        }
+
+        $whereClauses[] = "({$profilePrivacySettingClause})";
+    }
+
+    if ($allowedGroupsManagePrivacy && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_BLOCK_GUESTS])) {
+        if (!$currentUserID) {
+            $profilePrivacySettingClause = '';
+
+            $privacyTypeValue = PRIVACY_TYPE_BLOCK_GUESTS;
+
+            switch ($db->type) {
+                case 'pgsql':
+                case 'sqlite':
+                    $profilePrivacySettingClause .= "','||u.ougcCustomFieldsSearchProfilePrivacy||',' NOT LIKE '%,{$privacyTypeValue},%'";
+                    break;
+                default:
+                    $profilePrivacySettingClause .= "CONCAT(',',u.ougcCustomFieldsSearchProfilePrivacy,',') NOT LIKE '%,{$privacyTypeValue},%'";
+                    break;
+            }
+
+            $whereClauses[] = "({$profilePrivacySettingClause})";
+        }
+    }
+
+    if ($allowedGroupsManagePrivacy && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_BLOCK_USERS])) {
+        if ($currentUserID) {
+            $profilePrivacySettingClause = '';
+
+            $privacyTypeValue = PRIVACY_TYPE_BLOCK_USERS;
+
+            switch ($db->type) {
+                case 'pgsql':
+                case 'sqlite':
+                    $profilePrivacySettingClause .= "(','||u.ougcCustomFieldsSearchProfilePrivacy||',' NOT LIKE '%,{$privacyTypeValue},%' OR u.uid='{$currentUserID}')";
+                    break;
+                default:
+                    $profilePrivacySettingClause .= "(CONCAT(',',u.ougcCustomFieldsSearchProfilePrivacy,',') NOT LIKE '%,{$privacyTypeValue},%' OR u.uid='{$currentUserID}')";
+                    break;
+            }
+
+            $whereClauses[] = "({$profilePrivacySettingClause})";
+        }
+    }
+
+    if ($whereClauses) {
+        $whereClauses = implode(' AND ', $whereClauses);
+
+        $search_query .= " AND {$whereClauses}";
     }
 
     if (empty($mybb->input['doCustomFieldsSearch'])) {

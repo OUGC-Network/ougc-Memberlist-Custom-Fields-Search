@@ -26,5 +26,19 @@
   "searchCustomFields": {
     "optionscode": "text",
     "value": -1
+  },
+  "groupsCanManageProfilePrivacy": {
+    "optionscode": "groupselect",
+    "value": -1
+  },
+  "profilePrivacyTypes": {
+    "optionscode": "checkbox",
+    "options": [
+      "BuddyList",
+      "IgnoreList",
+      "Guests",
+      "Users"
+    ],
+    "value": "BuddyList,IgnoreList,Guests,Users"
   }
 }

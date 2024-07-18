@@ -46,12 +46,22 @@ $l = [
     'setting_ougcCustomFieldsSearch_searchFields_website' => 'Website',
     'setting_ougcCustomFieldsSearch_searchCustomFields' => 'Global Search Custom Fields',
     'setting_ougcCustomFieldsSearch_searchCustomFields_desc' => 'Select the allowed custom fields to search for in the global search form.',
+    'setting_ougcCustomFieldsSearch_groupsCanManageProfilePrivacy' => 'Manage Profile Privacy',
+    'setting_ougcCustomFieldsSearch_groupsCanManageProfilePrivacy_desc' => 'Select which groups are allowed to manage their profile privacy from the User Control Panel.',
+    'setting_ougcCustomFieldsSearch_profilePrivacyTypes' => 'Profile Privacy Types',
+    'setting_ougcCustomFieldsSearch_profilePrivacyTypes_desc' => 'Select which profile privacy permissions can be set.',
+    'setting_ougcCustomFieldsSearch_profilePrivacyTypes_BuddyList' => 'BuddyList',
+    'setting_ougcCustomFieldsSearch_profilePrivacyTypes_IgnoreList' => 'IgnoreList',
+    'setting_ougcCustomFieldsSearch_profilePrivacyTypes_Guests' => 'Guests',
+    'setting_ougcCustomFieldsSearch_profilePrivacyTypes_Users' => 'Users',
 
     'ougc_customfsearch_allCustomFields' => 'All custom fields',
 
     'ougcCustomFieldsSearchGroupPermissionsMemberList' => 'Member List Settings',
     'ougcCustomFieldsSearchCanSearchGroupIDs' => 'Can Search Selected Groups',
     'ougcCustomFieldsSearchCanSearchGroupIDsDescription' => 'Select the user groups that users in this groups are allowed to search for in the member list. Select none for all groups.',
+    'ougcCustomFieldsSearchCanViewProfilesGroupIDs' => 'Can View Selected Groups Profiles',
+    'ougcCustomFieldsSearchCanViewProfilesGroupIDsDescription' => 'Select the user groups that users in this groups are allowed to view profiles from. Select none for all groups.',
 
     'ougc_customfsearch_pluginlibrary' => 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or above, please upload this plugin to your forum and then try again.'
 ];

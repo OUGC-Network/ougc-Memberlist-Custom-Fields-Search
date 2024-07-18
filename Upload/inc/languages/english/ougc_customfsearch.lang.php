@@ -65,4 +65,10 @@ $l = [
 
     'ougc_customfsearch_urlDescriptionText' => 'Use the following link to share this filtered member list',
     //PLUGINLIBRARY
+
+    'ougcCustomFieldsSearchProfilePrivacyTitle' => 'Profile Privacy',
+    'ougcCustomFieldsSearchProfilePrivacyBuddyList' => 'Allow only users from my buddy list.',
+    'ougcCustomFieldsSearchProfilePrivacyIgnoreList' => 'Block users from my ignore list.',
+    'ougcCustomFieldsSearchProfilePrivacyGuests' => 'Block guests or unregistered users.',
+    'ougcCustomFieldsSearchProfilePrivacyUsers' => 'Block registered users.',
 ];

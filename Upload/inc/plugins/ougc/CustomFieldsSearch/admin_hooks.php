@@ -166,14 +166,26 @@ function admin_formcontainer_end()
         $pluginPermissions = [];
 
         foreach (FIELDS_DATA['usergroups'] as $fieldName => $fieldDefinition) {
-            $inputField = $form->generate_group_select(
-                "{$fieldName}[]",
-                sanitizeIntegers(explode(',', $mybb->get_input($fieldName))),
-                ['multiple' => true, 'size' => 5],
-                $lang->{$fieldName}
-            );
+            if (in_array(
+                $fieldName,
+                ['ougcCustomFieldsSearchCanSearchGroupIDs', 'ougcCustomFieldsSearchCanViewProfilesGroupIDs']
+            )) {
+                $inputField = $form->generate_group_select(
+                    "{$fieldName}[]",
+                    sanitizeIntegers(explode(',', $mybb->get_input($fieldName))),
+                    ['multiple' => true, 'size' => 5],
+                    $lang->{$fieldName}
+                );
 
-            $pluginPermissions[] = "<br />{$lang->{$fieldName}}<br /><small>{$lang->{"{$fieldName}Description"}}</small><br />{$inputField}";
+                $pluginPermissions[] = "<br />{$lang->{$fieldName}}<br /><small>{$lang->{"{$fieldName}Description"}}</small><br />{$inputField}";
+            } else {
+                $pluginPermissions[] = $form->generate_check_box(
+                    $fieldName,
+                    1,
+                    $lang->{$fieldName},
+                    ['checked' => $mybb->get_input($fieldName, MyBB::INPUT_INT)]
+                );
+            }
         }
 
         $form_container->output_row(
@@ -193,11 +205,18 @@ function admin_user_groups_edit_commit()
     global $updated_group;
 
     foreach (FIELDS_DATA['usergroups'] as $fieldName => $fieldDefinition) {
-        $updated_group[$fieldName] = $db->escape_string(
-            implode(
-                ',',
-                sanitizeIntegers($mybb->get_input($fieldName, MyBB::INPUT_ARRAY))
-            )
-        );
+        if (in_array(
+            $fieldName,
+            ['ougcCustomFieldsSearchCanSearchGroupIDs', 'ougcCustomFieldsSearchCanViewProfilesGroupIDs']
+        )) {
+            $updated_group[$fieldName] = $db->escape_string(
+                implode(
+                    ',',
+                    sanitizeIntegers($mybb->get_input($fieldName, MyBB::INPUT_ARRAY))
+                )
+            );
+        } else {
+            $updated_group[$fieldName] = $mybb->get_input($fieldName, MyBB::INPUT_INT);
+        }
     }
 }

@@ -45,8 +45,34 @@ const FIELDS_DATA = [
             'type' => 'TEXT',
             'null' => true,
         ],
+        'ougcCustomFieldsSearchCanViewProfilesGroupIDs' => [
+            'type' => 'TEXT',
+            'null' => true,
+        ],
+    ],
+    'users' => [
+        'ougcCustomFieldsSearchProfilePrivacy' => [
+            'type' => 'VARCHAR',
+            'size' => 10,
+            'default' => '',
+        ],
     ]
 ];
+
+const PRIVACY_TYPES = [
+    1 => 'BuddyList',
+    2 => 'IgnoreList',
+    3 => 'Guests',
+    4 => 'Users',
+];
+
+const PRIVACY_TYPE_ONLY_BUDDY_LIST = 1;
+
+const PRIVACY_TYPE_BLOCK_IGNORE_LIST = 2;
+
+const PRIVACY_TYPE_BLOCK_GUESTS = 3;
+
+const PRIVACY_TYPE_BLOCK_USERS = 4;
 
 function load_language()
 {
@@ -313,4 +339,19 @@ function cachedSearchClausesPurge(): bool
     }
 
     return $updateCache;
+}
+
+function profilePrivacyTypes(): array
+{
+    static $profilePrivacyTypes = PRIVACY_TYPES;
+
+    $enabledProfilePrivacyTypes = array_flip(explode(',', getSetting('profilePrivacyTypes')));
+
+    foreach ($profilePrivacyTypes as $privacyTypeKey => $privacyTypeValue) {
+        if (!isset($enabledProfilePrivacyTypes[$privacyTypeValue])) {
+            unset($profilePrivacyTypes[$privacyTypeKey]);
+        }
+    }
+
+    return $profilePrivacyTypes;
 }
