@@ -68,39 +68,39 @@ if (defined('IN_ADMINCP')) {
 }
 
 // Plugin API
-function ougc_customfsearch_info()
+function ougc_customfsearch_info(): array
 {
     return _info();
 }
 
 // Activate the plugin.
-function ougc_customfsearch_activate()
+function ougc_customfsearch_activate(): bool
 {
-    _activate();
+    return _activate();
 }
 
 // Deactivate the plugin.
-function ougc_customfsearch_deactivate()
+function ougc_customfsearch_deactivate(): bool
 {
-    _deactivate();
+    return _deactivate();
 }
 
 // Install the plugin.
-function ougc_customfsearch_install()
+function ougc_customfsearch_install(): bool
 {
-    _install();
+    return _install();
 }
 
 // Check if installed.
-function ougc_customfsearch_is_installed()
+function ougc_customfsearch_is_installed(): bool
 {
     return _is_installed();
 }
 
 // Unnstall the plugin.
-function ougc_customfsearch_uninstall()
+function ougc_customfsearch_uninstall(): bool
 {
-    _uninstall();
+    return _uninstall();
 }
 
 // control_object by Zinga Burga from MyBBHacks ( mybbhacks.zingaburga.com )

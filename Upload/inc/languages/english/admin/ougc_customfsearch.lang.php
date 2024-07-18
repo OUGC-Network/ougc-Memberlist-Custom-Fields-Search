@@ -49,5 +49,9 @@ $l = [
 
     'ougc_customfsearch_allCustomFields' => 'All custom fields',
 
+    'ougcCustomFieldsSearchGroupPermissionsMemberList' => 'Member List Settings',
+    'ougcCustomFieldsSearchCanSearchGroupIDs' => 'Can Search Selected Groups',
+    'ougcCustomFieldsSearchCanSearchGroupIDsDescription' => 'Select the user groups that users in this groups are allowed to search for in the member list. Select none for all groups.',
+
     'ougc_customfsearch_pluginlibrary' => 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or above, please upload this plugin to your forum and then try again.'
 ];

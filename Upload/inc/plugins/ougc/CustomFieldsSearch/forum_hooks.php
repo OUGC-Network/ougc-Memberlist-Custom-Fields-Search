@@ -32,8 +32,12 @@ namespace ougc\CustomFieldsSearch\Hooks\Forum;
 
 use MyBB;
 
+use function ougc\CustomFieldsSearch\Core\cachedSearchClauseGet;
+use function ougc\CustomFieldsSearch\Core\cachedSearchClausePut;
+use function ougc\CustomFieldsSearch\Core\cachedSearchClausesPurge;
 use function ougc\CustomFieldsSearch\Core\getSetting;
 use function ougc\CustomFieldsSearch\Core\getTemplate;
+use function ougc\CustomFieldsSearch\Core\sanitizeIntegers;
 use function ougc\CustomFieldsSearch\Core\urlHandlerBuild;
 use function ougc\CustomFieldsSearch\Core\load_language;
 use function ougc\CustomFieldsSearch\Core\urlHandler;
@@ -48,7 +52,7 @@ function global_start()
         $templatelist .= ', ougccustomfsearch_field_text, ougccustomfsearch_field, ougccustomfsearch_field_select_option, ougccustomfsearch_field_select, ougccustomfsearch, ougccustomfsearch_groupsSelectOption, ougccustomfsearch_groupsSelect, ougccustomfsearch_field_checkbox, ougccustomfsearch_urlDescription';
     }
 
-    \ougc\CustomFieldsSearch\Core\cachedSearchClausesPurge();
+    cachedSearchClausesPurge();
 }
 
 function memberlist_search()
@@ -72,10 +76,17 @@ function memberlist_search()
         $searchGroupsCheckedBoth = 'checked="checked"';
     }
 
+    $allowedGroupsToSearch = sanitizeIntegers(
+        explode(',', $mybb->usergroup['ougcCustomFieldsSearchCanSearchGroupIDs'])
+    );
+
     foreach ($mybb->cache->read('usergroups') as $groupID => $groupData) {
         $groupID = (int)$groupID;
 
-        if (empty($groupData['showmemberlist']) || $groupID === 1) {
+        if (empty($groupData['showmemberlist']) || $groupID === 1 || ($allowedGroupsToSearch && !in_array(
+                    $groupID,
+                    $allowedGroupsToSearch
+                ))) {
             continue;
         }
 
@@ -302,6 +313,36 @@ function memberlist_intermediate90(): bool
 
     $ougcCustomFieldSearchUrlDescription = '';
 
+    $allowedGroupsToSearch = sanitizeIntegers(
+        explode(',', $mybb->usergroup['ougcCustomFieldsSearchCanSearchGroupIDs'])
+    );
+
+    if ($allowedGroupsToSearch) {
+        $whereClausesGroups = [];
+
+        foreach ($allowedGroupsToSearch as $groupID) {
+            $whereClausesGroups[] = "u.usergroup='{$groupID}'";
+
+            switch ($db->type) {
+                case 'pgsql':
+                case 'sqlite':
+                    $whereClausesGroups[] = "','||u.additionalgroups||',' LIKE '%,{$groupID},%'";
+                    break;
+                default:
+                    $whereClausesGroups[] = "CONCAT(',',u.additionalgroups,',') LIKE '%,{$groupID},%'";
+                    break;
+            }
+
+            $ougcCustomFieldSearchUrlParams["customSearchGroups[{$groupID}]"] = $groupID;
+        }
+
+        $whereClausesGroups = implode(' OR ', $whereClausesGroups);
+
+        if ($whereClausesGroups) {
+            $search_query .= " AND ({$whereClausesGroups})";
+        }
+    }
+
     if (empty($mybb->input['doCustomFieldsSearch'])) {
         return false;
     }
@@ -442,7 +483,6 @@ function memberlist_intermediate90(): bool
             $whereClauses[$customFieldKey] = "LOWER(f.{$customFieldKey}) {$comparisonOperator} '%{$db->escape_string_like(my_strtolower($filterValue))}%'";
         }
     }
-    //_dump(123, $ougcCustomFieldSearchUrlParams);
 
     if ($whereClauses) {
         global $lang;
@@ -492,7 +532,7 @@ function memberlist_intermediate90(): bool
         if (getSetting('cacheIntervalSeconds')) {
             $uniqueIdentifier = md5($search_query);
 
-            $cachedSearchClause = \ougc\CustomFieldsSearch\Core\cachedSearchClauseGet($uniqueIdentifier, true);
+            $cachedSearchClause = cachedSearchClauseGet($uniqueIdentifier, true);
         }
 
         if (!empty($cachedSearchClause)) {
@@ -514,7 +554,7 @@ function memberlist_intermediate90(): bool
             $search_query = "u.uid IN ('{$userIDs}')";
 
             if (!empty($uniqueIdentifier)) {
-                \ougc\CustomFieldsSearch\Core\cachedSearchClausePut($uniqueIdentifier, $search_query);
+                cachedSearchClausePut($uniqueIdentifier, $search_query);
             }
         }
     }

@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Private Threads plugin (/inc/plugins/ougc/PrivateThreads/admin_hooks.php)
+ *    OUGC Private Threads plugin (/inc/plugins/ougc/CustomFieldsSearch/admin_hooks.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2020 Omar Gonzalez
  *
@@ -32,10 +32,10 @@ namespace ougc\CustomFieldsSearch\Hooks\Admin;
 
 use MyBB;
 
-use function ougc\PrivateThreads\Core\load_language;
-use function ougc\PrivateThreads\MyAlerts\getAvailableLocations;
-use function ougc\PrivateThreads\MyAlerts\installLocation;
-use function ougc\PrivateThreads\MyAlerts\MyAlertsIsIntegrable;
+use function ougc\CustomFieldsSearch\Core\load_language;
+use function ougc\CustomFieldsSearch\Core\sanitizeIntegers;
+
+use const ougc\CustomFieldsSearch\Core\FIELDS_DATA;
 
 function admin_config_plugins_deactivate(): bool
 {
@@ -64,24 +64,24 @@ function admin_config_plugins_deactivate(): bool
 
 function admin_config_settings_start()
 {
-    \ougc\CustomFieldsSearch\Core\load_language();
+    load_language();
 }
 
 function admin_style_templates_set()
 {
-    \ougc\CustomFieldsSearch\Core\load_language();
+    load_language();
 }
 
 function admin_config_settings_change()
 {
-    \ougc\CustomFieldsSearch\Core\load_language();
+    load_language();
 }
 
 function admin_formcontainer_output_row(array $rowArguments): array
 {
     global $lang;
 
-    \ougc\CustomFieldsSearch\Core\load_language();
+    load_language();
 
     if (!(
         !empty($rowArguments['title']) &&
@@ -150,6 +150,54 @@ function admin_config_settings_change_commit()
             'settings',
             ['value' => $db->escape_string($profileFieldsIDs)],
             "name='ougcCustomFieldsSearch_searchCustomFields'"
+        );
+    }
+}
+
+function admin_formcontainer_end()
+{
+    global $run_module, $form_container, $lang;
+
+    if ($run_module == 'user' && isset($lang->general) && $form_container->_title == $lang->general) {
+        global $form, $mybb;
+
+        load_language();
+
+        $pluginPermissions = [];
+
+        foreach (FIELDS_DATA['usergroups'] as $fieldName => $fieldDefinition) {
+            $inputField = $form->generate_group_select(
+                "{$fieldName}[]",
+                sanitizeIntegers(explode(',', $mybb->get_input($fieldName))),
+                ['multiple' => true, 'size' => 5],
+                $lang->{$fieldName}
+            );
+
+            $pluginPermissions[] = "<br />{$lang->{$fieldName}}<br /><small>{$lang->{"{$fieldName}Description"}}</small><br />{$inputField}";
+        }
+
+        $form_container->output_row(
+            $lang->ougcCustomFieldsSearchGroupPermissionsMemberList,
+            '',
+            '<div class="group_settings_bit">' . implode(
+                '</div><div class="group_settings_bit">',
+                $pluginPermissions
+            ) . '</div>'
+        );
+    }
+}
+
+function admin_user_groups_edit_commit()
+{
+    global $mybb, $db;
+    global $updated_group;
+
+    foreach (FIELDS_DATA['usergroups'] as $fieldName => $fieldDefinition) {
+        $updated_group[$fieldName] = $db->escape_string(
+            implode(
+                ',',
+                sanitizeIntegers($mybb->get_input($fieldName, MyBB::INPUT_ARRAY))
+            )
         );
     }
 }

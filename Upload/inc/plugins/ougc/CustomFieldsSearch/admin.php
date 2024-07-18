@@ -35,9 +35,10 @@ use DirectoryIterator;
 use function ougc\CustomFieldsSearch\Core\load_language;
 use function ougc\CustomFieldsSearch\Core\load_pluginlibrary;
 
+use const ougc\CustomFieldsSearch\Core\FIELDS_DATA;
 use const ougc\CustomFieldsSearch\ROOT;
 
-function _info()
+function _info(): array
 {
     global $lang;
 
@@ -60,7 +61,7 @@ function _info()
     ];
 }
 
-function _activate()
+function _activate(): bool
 {
     global $PL, $lang, $cache, $db, $settings;
 
@@ -127,6 +128,8 @@ function _activate()
         $plugins['customfsearch'] = $_info['versioncode'];
     }
 
+    dbVerifyColumns();
+
     /*~*~* RUN UPDATES START *~*~*/
 
     /*~*~* RUN UPDATES END *~*~*/
@@ -134,38 +137,56 @@ function _activate()
     $plugins['customfsearch'] = $_info['versioncode'];
 
     $cache->update('ougc_plugins', $plugins);
+
+    return true;
 }
 
-function _deactivate()
+function _deactivate(): bool
 {
+    return true;
 }
 
-function _install()
+function _install(): bool
 {
+    dbVerifyColumns();
+
+    return true;
 }
 
-function _is_installed()
+function _is_installed(): bool
 {
-    global $cache;
+    global $db;
 
-    $plugins = $cache->read('ougc_plugins');
+    $isInstalled = false;
 
-    if (!$plugins) {
-        $plugins = [];
+    foreach (FIELDS_DATA as $tableName => $tableColumns) {
+        if ($db->table_exists($tableName)) {
+            foreach ($tableColumns as $fieldName => $fieldData) {
+                $isInstalled = $db->field_exists($fieldName, $tableName);
+            }
+        }
     }
 
-    return isset($plugins['customfsearch']);
+    return $isInstalled;
 }
 
-function _uninstall()
+function _uninstall(): bool
 {
     global $db, $PL, $cache;
 
     load_pluginlibrary();
 
-    $PL->settings_delete('ougc_customfsearch');
+    foreach (FIELDS_DATA as $tableName => $tableColumns) {
+        if ($db->table_exists($tableName)) {
+            foreach ($tableColumns as $fieldName => $fieldData) {
+                if ($db->field_exists($fieldName, $tableName)) {
+                    $db->drop_column($tableName, $fieldName);
+                }
+            }
+        }
+    }
 
-    $PL->settings_delete('ougcPrivateThreads');
+    $PL->settings_delete('ougc_customfsearch');
 
     $PL->templates_delete('ougccustomfsearch');
 
@@ -185,4 +206,62 @@ function _uninstall()
     $cache->delete('ougc_customfsearch');
 
     $cache->delete('ougcCustomFieldsSearch');
+
+    return true;
+}
+
+function buildDbFieldDefinition(array $fieldData): string
+{
+    $fieldDefinition = '';
+
+    $fieldDefinition .= $fieldData['type'];
+
+    if (isset($fieldData['size'])) {
+        $fieldDefinition .= "({$fieldData['size']})";
+    }
+
+    if (isset($fieldData['unsigned'])) {
+        if ($fieldData['unsigned'] === true) {
+            $fieldDefinition .= ' UNSIGNED';
+        } else {
+            $fieldDefinition .= ' SIGNED';
+        }
+    }
+
+    if (!isset($fieldData['null'])) {
+        $fieldDefinition .= ' NOT';
+    }
+
+    $fieldDefinition .= ' NULL';
+
+    if (isset($fieldData['auto_increment'])) {
+        $fieldDefinition .= ' AUTO_INCREMENT';
+    }
+
+    if (isset($fieldData['default'])) {
+        $fieldDefinition .= " DEFAULT '{$fieldData['default']}'";
+    }
+
+    return $fieldDefinition;
+}
+
+function dbVerifyColumns(): bool
+{
+    global $db;
+
+    foreach (FIELDS_DATA as $tableName => $tableColumns) {
+        foreach ($tableColumns as $fieldName => $fieldData) {
+            if (!isset($fieldData['type'])) {
+                continue;
+            }
+
+            if ($db->field_exists($fieldName, $tableName)) {
+                $db->modify_column($tableName, "`{$fieldName}`", buildDbFieldDefinition($fieldData));
+            } else {
+                $db->add_column($tableName, $fieldName, buildDbFieldDefinition($fieldData));
+            }
+        }
+    }
+
+    return true;
 }

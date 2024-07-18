@@ -35,8 +35,18 @@ use function ougc\CustomFieldsSearch\Admin\_info;
 use const ougc\CustomFieldsSearch\ROOT;
 use const ougc\CustomFieldsSearch\Core\SETTINGS;
 use const ougc\CustomFieldsSearch\Core\DEBUG;
+use const TIME_NOW;
 
 const URL = 'memberlist.php';
+
+const FIELDS_DATA = [
+    'usergroups' => [
+        'ougcCustomFieldsSearchCanSearchGroupIDs' => [
+            'type' => 'TEXT',
+            'null' => true,
+        ],
+    ]
+];
 
 function load_language()
 {
@@ -171,6 +181,15 @@ function urlHandlerBuild(array $urlAppend = [], bool $fetchImportUrl = false, bo
     return $PL->url_append(urlHandlerGet(), $urlAppend, '&amp;', $encode);
 }
 
+function sanitizeIntegers(array $dataObject): array
+{
+    foreach ($dataObject as &$objectValue) {
+        $objectValue = (int)$objectValue;
+    }
+
+    return array_filter($dataObject);
+}
+
 function cachedSearchClauseGet(string $uniqueIdentifier, bool $refreshUpdateStamp = false): string
 {
     global $mybb;
@@ -183,7 +202,7 @@ function cachedSearchClauseGet(string $uniqueIdentifier, bool $refreshUpdateStam
 
     if (isset($searchResultsCache[$uniqueIdentifier]) && ($searchResultsCache[$uniqueIdentifier]['timeStamp'] + getSetting(
                 'cacheIntervalSeconds'
-            ) > \TIME_NOW)) {
+            ) > TIME_NOW)) {
         $queryClause = $searchResultsCache[$uniqueIdentifier]['queryClause'];
 
         if ($refreshUpdateStamp) {
@@ -215,7 +234,7 @@ function cachedSearchClausePut(string $uniqueIdentifier, string $queryClause): b
     }
 
     $searchResultsCache[$uniqueIdentifier] = [
-        'timeStamp' => \TIME_NOW,
+        'timeStamp' => TIME_NOW,
         'queryClause' => $queryClause,
     ];
 
@@ -225,7 +244,7 @@ function cachedSearchClausePut(string $uniqueIdentifier, string $queryClause): b
     // TODO, purge obsolete objects
 }
 
-function cachedSearchClauseUpdate(string $uniqueIdentifier, array $updateData = ['timeStamp' => \TIME_NOW]): bool
+function cachedSearchClauseUpdate(string $uniqueIdentifier, array $updateData = ['timeStamp' => TIME_NOW]): bool
 {
     global $mybb;
 
@@ -281,7 +300,7 @@ function cachedSearchClausesPurge(): bool
         foreach ($searchResultsCache as $uniqueIdentifier => $querySearchData) {
             if (!($querySearchData['timeStamp'] + getSetting(
                     'cacheIntervalSeconds'
-                ) > \TIME_NOW)) {
+                ) > TIME_NOW)) {
                 unset($searchResultsCache[$uniqueIdentifier]);
 
                 $updateCache = true;
