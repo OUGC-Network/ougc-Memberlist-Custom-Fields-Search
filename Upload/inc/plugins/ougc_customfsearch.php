@@ -67,6 +67,10 @@ if (defined('IN_ADMINCP')) {
     addHooks('ougc\CustomFieldsSearch\Hooks\Forum');
 }
 
+require_once ROOT . '/shared_hooks.php';
+
+addHooks('ougc\CustomFieldsSearch\Hooks\Shared');
+
 // Plugin API
 function ougc_customfsearch_info(): array
 {

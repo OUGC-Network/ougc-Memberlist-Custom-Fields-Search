@@ -120,25 +120,6 @@ function modcp_editprofile_end(): bool
     return true;
 }
 
-function datahandler_user_update(UserDataHandler $userDataHandler): UserDataHandler
-{
-    global $mybb;
-
-    if (!isset($mybb->input['ougcCustomFieldsSearchProfilePrivacyInput'])) {
-        //return $userDataHandler;
-    }
-
-    global $db;
-
-    $privacySettings = $mybb->get_input('ougcCustomFieldsSearchProfilePrivacyInput', MyBB::INPUT_ARRAY);
-
-    $privacySettings = $db->escape_string(implode(',', sanitizeIntegers(array_keys($privacySettings))));
-
-    $userDataHandler->user_update_data['ougcCustomFieldsSearchProfilePrivacy'] = $privacySettings;
-
-    return $userDataHandler;
-}
-
 function member_profile_start(): bool
 {
     global $memprofile;
