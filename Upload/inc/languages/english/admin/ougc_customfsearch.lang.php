@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Custom Fields Search plugin (/inc/languages/english/admin/ougc_customfsearch.lang.php)
+ *    ougc Member List Custom plugin (/inc/languages/english/admin/ougc_customfsearch.lang.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2021 Omar Gonzalez
  *
@@ -27,7 +27,7 @@
  ****************************************************************************/
 
 $l = [
-    'setting_group_ougc_customfsearch' => 'OUGC Member List Advanced Search',
+    'setting_group_ougc_customfsearch' => 'ougc Member List Custom Advanced Search',
     'setting_group_ougc_customfsearch_desc' => 'Allow more complex searches in the member list advanced search page.',
 
     'setting_group_ougcCustomFieldsSearch' => 'Member List Advanced Search',

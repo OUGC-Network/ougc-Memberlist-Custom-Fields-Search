@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Custom Fields Search plugin (/inc/plugins/ougc_customfsearch/forum_hooks.php)
+ *    ougc Member List Advanced Search plugin (/inc/plugins/ougc_customfsearch/forum_hooks.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2021 Omar Gonzalez
  *

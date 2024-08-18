@@ -1,6 +1,6 @@
 ![[logo.png]]
 
-<h3 align="center">OUGC Custom Fields Search</h3>
+<h3 align="center">ougc Member List Advanced Search</h3>
 
 ---
 

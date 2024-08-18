@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Custom Fields Search plugin (/inc/plugins/ougc_customfsearch.php)
+ *    ougc Member List Custom plugin (/inc/plugins/ougc_customfsearch.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2021 Omar Gonzalez
  *
@@ -46,7 +46,7 @@ define('ougc\CustomFieldsSearch\Core\SETTINGS', [
     //'key' => '',
 ]);
 
-define('ougc\CustomFieldsSearch\Core\DEBUG', false);
+define('ougc\CustomFieldsSearch\Core\DEBUG', true);
 
 define('ougc\CustomFieldsSearch\ROOT', constant('MYBB_ROOT') . 'inc/plugins/ougc/CustomFieldsSearch');
 

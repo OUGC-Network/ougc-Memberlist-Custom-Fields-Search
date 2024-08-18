@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Custom Fields Search plugin (/inc/plugins/ougc_customfsearch/admin.php)
+ *    ougc Member List Custom plugin (/inc/plugins/ougc_customfsearch/admin.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2021 Omar Gonzalez
  *
@@ -45,7 +45,7 @@ function _info(): array
     load_language();
 
     return [
-        'name' => 'OUGC Member List Advanced Search',
+        'name' => 'ougc Member List Custom Advanced Search',
         'description' => $lang->setting_group_ougc_customfsearch_desc,
         'website' => 'https://ougc.network',
         'author' => 'Omar G.',
@@ -112,7 +112,7 @@ function _activate(): bool
     }
 
     if ($templates) {
-        $PL->templates('ougccustomfsearch', 'OUGC Custom Fields Search', $templates);
+        $PL->templates('ougccustomfsearch', 'Member List Advanced Search', $templates);
     }
 
     // Insert/update version into cache
