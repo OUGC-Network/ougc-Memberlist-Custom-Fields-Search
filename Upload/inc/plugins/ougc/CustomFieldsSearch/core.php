@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace ougc\CustomFieldsSearch\Core;
 
+use OUGC_ProfiecatsCache;
+
 use function ougc\CustomFieldsSearch\Admin\_info;
 
 use const ougc\CustomFieldsSearch\ROOT;
@@ -354,4 +356,40 @@ function profilePrivacyTypes(): array
     }
 
     return $profilePrivacyTypes;
+}
+
+function getProfileFieldsCache(): array
+{
+    global $mybb;
+    global $profiecats;
+
+    if (class_exists('OUGC_ProfiecatsCache') && $profiecats instanceof OUGC_ProfiecatsCache) {
+        return $profiecats->cache['original'];
+    }
+
+    return (array)$mybb->cache->read('profilefields');
+}
+
+function getUserAvatarLink(array $userData): string
+{
+    global $mybb, $plugins;
+
+    $avatarUrl = $mybb->settings['bburl'] . '/images/default_avatar.png';
+
+    if (!empty($userData['avatar'])) {
+        $avatarUrl = $userData['avatar'];
+
+        if ($userData['avatartype'] === 'upload' && my_strpos($userData['avatar'], '://') === false) {
+            $avatarUrl = "{$mybb->settings['bburl']}/{$avatarUrl}";
+        }
+    }
+
+    $hook_arguments = [
+        'userData' => &$userData,
+        'avatarUrl' => &$avatarUrl
+    ];
+
+    $plugins->run_hooks('ougc_member_list_custom_fields_search_get_user_avatar_link_end', $hook_arguments);
+
+    return $avatarUrl;
 }

@@ -37,8 +37,10 @@ use UserDataHandler;
 use function ougc\CustomFieldsSearch\Core\cachedSearchClauseGet;
 use function ougc\CustomFieldsSearch\Core\cachedSearchClausePut;
 use function ougc\CustomFieldsSearch\Core\cachedSearchClausesPurge;
+use function ougc\CustomFieldsSearch\Core\getProfileFieldsCache;
 use function ougc\CustomFieldsSearch\Core\getSetting;
 use function ougc\CustomFieldsSearch\Core\getTemplate;
+use function ougc\CustomFieldsSearch\Core\getUserAvatarLink;
 use function ougc\CustomFieldsSearch\Core\profilePrivacyTypes;
 use function ougc\CustomFieldsSearch\Core\sanitizeIntegers;
 use function ougc\CustomFieldsSearch\Core\urlHandlerBuild;
@@ -636,12 +638,20 @@ function memberlist_intermediate90(): bool
 
     $ignoredProfileFieldsIDs = array_flip(explode(',', getSetting('ignoredProfileFieldsIDs')));
 
+    $profileFieldsCache = getProfileFieldsCache();
+
+    $profileFieldsIDs = array_column($profileFieldsCache, 'fid');
+
     foreach ($ougcCustomFieldSearchFilters as $filterKey => $filterValue) {
         if (empty($filterValue)) {
             continue;
         }
 
         $fieldID = (int)str_replace('fid', '', $filterKey);
+
+        if (!in_array($fieldID, $profileFieldsIDs)) {
+            continue;
+        }
 
         $customFieldKey = "fid{$fieldID}";
 
@@ -830,7 +840,7 @@ function pre_output_page(string $pageContents): string
         return $pageContents;
     }
 
-    global $theme, $lang, $cache;
+    global $theme, $lang, $cache, $mybb;
 
     load_language();
 
@@ -880,7 +890,7 @@ function xmlhttp(): bool
         return false;
     }
 
-    $mybb->input['query'] = ltrim($mybb->get_input('query'));
+    $mybb->input['query'] = trim($mybb->get_input('query'));
 
     if (my_strlen($mybb->input['query']) < 2) {
         return false;
@@ -902,6 +912,8 @@ function xmlhttp(): bool
 
     $leftJoin = '';
 
+    $ougcCustomFieldSearchUrlParams = [];
+
     switch ($searchField) {
         case'username':
             if (mb_strpos(getSetting('searchFields'), 'username') !== false) {
@@ -910,6 +922,10 @@ function xmlhttp(): bool
                 $filterField = 'username';
 
                 $dbFields[] = 'DISTINCT u.username';
+
+                $ougcCustomFieldSearchUrlParams[$filterField] = htmlspecialchars_uni($mybb->input['query']);
+
+                $ougcCustomFieldSearchUrlParams['username_match'] = 'contains';
             }
             break;
         case'website':
@@ -918,7 +934,9 @@ function xmlhttp(): bool
 
                 $filterField = 'website';
 
-                $dbFields[] = 'DISTINCT u.website AS fieldUserName';
+                $dbFields[] = 'DISTINCT u.website';
+
+                $ougcCustomFieldSearchUrlParams[$filterField] = urlencode($mybb->input['query']);
             }
             break;
         default:
@@ -934,30 +952,75 @@ function xmlhttp(): bool
                 $dbFields[] = "DISTINCT f.{$customFieldKey}";
 
                 $filterField = $customFieldKey;
+
+                $ougcCustomFieldSearchUrlParams["customSearchFields[{$filterField}]"] = htmlspecialchars_uni(
+                    $mybb->input['query']
+                );
             }
     }
 
-    $returnObjects = [];
+    //$leftJoin = " LEFT JOIN {$db->table_prefix}users ud ON (ud.uid=u.uid)";
 
-    if (isset($dbSearchField)) {
+    $dbFields[] = 'u.uid';
+
+    $dbFields[] = 'u.avatar';
+
+    $dbFields[] = 'u.avatartype';
+
+    if (!isset($dbSearchField) || empty($filterField)) {
+        echo json_encode([]);
+
+        return true;
+    }
+
+    global $lang;
+
+    load_language();
+
+    $returnObjects = ['results' => []];
+
+    if (!empty($ougcCustomFieldSearchUrlParams)) {
         $dbQuery = $db->simple_select(
             'users u' . $leftJoin,
-            implode(',', $dbFields),
-            "LOWER({$dbSearchField}) LIKE '%{$db->escape_string_like(mb_strtolower($mybb->input['query']))}%'",
-            [
-                'order_by' => 'u.username',
-                'order_dir' => 'asc',
-                'limit_start' => 0,
-                'limit' => 15
-            ]
+            'COUNT(u.uid) as totalUsers',
+            "LOWER({$dbSearchField}) LIKE '%{$db->escape_string_like(mb_strtolower($mybb->input['query']))}%'"
         );
 
-        while ($perkData = $db->fetch_array($dbQuery)) {
-            $returnObjects[] = [
-                'id' => $perkData[$filterField],
-                'text' => $perkData[$filterField]
-            ];
-        }
+        $totalUsers = $db->fetch_field($dbQuery, 'totalUsers');
+
+        $ougcCustomFieldSearchUrlParams['doCustomFieldsSearch'] = 1;
+
+        $returnObjects['action'] = [
+            'url' => "{$mybb->settings['bburl']}/" . urlHandlerBuild($ougcCustomFieldSearchUrlParams),
+            'text' => $lang->sprintf(
+                $lang->ougcCustomFieldsSearchGlobalSearchResultsViewAll,
+                my_number_format($totalUsers)
+            )
+        ];
+    }
+
+    $dbQuery = $db->simple_select(
+        'users u' . $leftJoin,
+        implode(',', $dbFields),
+        "LOWER({$dbSearchField}) LIKE '%{$db->escape_string_like(mb_strtolower($mybb->input['query']))}%'",
+        [
+            'order_by' => 'u.username',
+            'order_dir' => 'asc',
+            'limit_start' => 0,
+            'limit' => 15
+        ]
+    );
+
+    while ($searchData = $db->fetch_array($dbQuery)) {
+        $userData = get_user($searchData['uid']);
+
+        $returnObjects['results'][] = [
+            'id' => $searchData[$filterField],
+            'text' => $searchData[$filterField],
+            'title' => $searchData[$filterField],
+            'url' => "{$mybb->settings['bburl']}/" . get_profile_link($userData['uid']),
+            'image' => getUserAvatarLink($userData)
+        ];
     }
 
     echo json_encode($returnObjects);
