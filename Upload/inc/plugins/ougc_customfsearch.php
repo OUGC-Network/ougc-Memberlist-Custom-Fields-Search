@@ -46,7 +46,7 @@ define('ougc\CustomFieldsSearch\Core\SETTINGS', [
     //'key' => '',
 ]);
 
-define('ougc\CustomFieldsSearch\Core\DEBUG', true);
+define('ougc\CustomFieldsSearch\Core\DEBUG', false);
 
 define('ougc\CustomFieldsSearch\ROOT', constant('MYBB_ROOT') . 'inc/plugins/ougc/CustomFieldsSearch');
 
