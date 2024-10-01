@@ -157,11 +157,11 @@ function admin_config_settings_change_commit()
     }
 }
 
-function admin_formcontainer_end()
+function admin_formcontainer_end(array &$hook_arguments): array
 {
-    global $run_module, $form_container, $lang;
+    global $run_module, $lang;
 
-    if ($run_module == 'user' && isset($lang->general) && $form_container->_title == $lang->general) {
+    if ($run_module == 'user' && isset($lang->general) && $hook_arguments['this']->_title == $lang->general) {
         global $form, $mybb;
 
         load_language();
@@ -191,7 +191,7 @@ function admin_formcontainer_end()
             }
         }
 
-        $form_container->output_row(
+        $hook_arguments['this']->output_row(
             $lang->ougcCustomFieldsSearchGroupPermissionsMemberList,
             '',
             '<div class="group_settings_bit">' . implode(
@@ -200,6 +200,8 @@ function admin_formcontainer_end()
             ) . '</div>'
         );
     }
+
+    return $hook_arguments;
 }
 
 function admin_user_groups_edit_commit()
