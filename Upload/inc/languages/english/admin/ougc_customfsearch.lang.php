@@ -8,7 +8,7 @@
  *
  *    Website: https://ougc.network
  *
- *    Adds the option to filter members by custom profile fields in the advanced member list page.
+ *    Allow more complex searches in the member list advanced search page.
  *
  ***************************************************************************
  ****************************************************************************

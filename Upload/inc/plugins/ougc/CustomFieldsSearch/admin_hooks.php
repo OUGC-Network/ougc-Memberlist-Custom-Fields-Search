@@ -2,13 +2,13 @@
 
 /***************************************************************************
  *
- *    OUGC Private Threads plugin (/inc/plugins/ougc/CustomFieldsSearch/admin_hooks.php)
+ *    ougc Member List Advanced Search plugin (/inc/plugins/ougc/CustomFieldsSearch/admin_hooks.php)
  *    Author: Omar Gonzalez
- *    Copyright: © 2020 Omar Gonzalez
+ *    Copyright: © 2021 Omar Gonzalez
  *
  *    Website: https://ougc.network
  *
- *    Allow users to mark individual threads as private to be visible for specific users only.
+ *    Allow more complex searches in the member list advanced search page.
  *
  ***************************************************************************
  ****************************************************************************
