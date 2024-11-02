@@ -64,7 +64,7 @@ function global_start()
     cachedSearchClausesPurge();
 }
 
-function usercp_profile_end($userData = []): bool
+function usercp_profile_end(&$userData = []): bool
 {
     global $mybb;
     global $ougcCustomFieldsSearchProfilePrivacyInput;
@@ -72,7 +72,7 @@ function usercp_profile_end($userData = []): bool
     $ougcCustomFieldsSearchProfilePrivacyInput = '';
 
     if (!is_array($userData)) {
-        $userData = $mybb->user;
+        $userData = &$mybb->user;
     }
 
     if (!is_member(getSetting('groupsCanManageProfilePrivacy'), $userData)) {
@@ -91,7 +91,7 @@ function usercp_profile_end($userData = []): bool
         );
     } else {
         $privacySettings = array_flip(
-            sanitizeIntegers(explode(',', $userData['ougcCustomFieldsSearchProfilePrivacy']))
+            sanitizeIntegers(explode(',', (string)$userData['ougcCustomFieldsSearchProfilePrivacy']))
         );
     }
 
@@ -159,13 +159,13 @@ function member_profile_start(): bool
     $enabledProfilePrivacyTypes = profilePrivacyTypes();
 
     if (isset($userPrivacySettings[PRIVACY_TYPE_ONLY_BUDDY_LIST]) && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_ONLY_BUDDY_LIST])) {
-        if (!in_array($currentUserID, sanitizeIntegers(explode(',', $memprofile['buddylist'])))) {
+        if (!in_array($currentUserID, sanitizeIntegers(explode(',', (string)$memprofile['buddylist'])))) {
             error($lang->error_nomember);
         }
     }
 
     if (isset($userPrivacySettings[PRIVACY_TYPE_BLOCK_IGNORE_LIST]) && isset($enabledProfilePrivacyTypes[PRIVACY_TYPE_BLOCK_IGNORE_LIST])) {
-        if (in_array($currentUserID, sanitizeIntegers(explode(',', $memprofile['ignorelist'])))) {
+        if (in_array($currentUserID, sanitizeIntegers(explode(',', (string)$memprofile['ignorelist'])))) {
             error($lang->error_nomember);
         }
     }
@@ -207,7 +207,7 @@ function memberlist_search()
     }
 
     $allowedGroupsToSearch = sanitizeIntegers(
-        explode(',', $mybb->usergroup['ougcCustomFieldsSearchCanSearchGroupIDs'])
+        explode(',', (string)$mybb->usergroup['ougcCustomFieldsSearchCanSearchGroupIDs'])
     );
 
     foreach ($mybb->cache->read('usergroups') as $groupID => $groupData) {
@@ -240,7 +240,7 @@ function memberlist_search()
 
         $alternativeBackground = alt_trow(true);
 
-        $ignoredProfileFieldsIDs = array_flip(explode(',', getSetting('ignoredProfileFieldsIDs')));
+        $ignoredProfileFieldsIDs = array_flip(explode(',', (string)getSetting('ignoredProfileFieldsIDs')));
 
         foreach ($customFieldsCache as $customFieldData) {
             if (!is_member(
@@ -278,7 +278,7 @@ function memberlist_search()
             }
 
             if (in_array($fieldType, ['multiselect', 'select', 'radio', 'checkbox'])) {
-                foreach (explode("\n", $fieldOptions) as $optionValue) {
+                foreach (explode("\n", (string)$fieldOptions) as $optionValue) {
                     $optionValue = trim($optionValue);
                     $optionValue = str_replace("\n", "\\n", $optionValue);
                     $optionSelect = '';
@@ -635,7 +635,7 @@ function memberlist_intermediate90(): bool
 
     $customFieldsCacheIDs = array_column($customFieldsCache, 'fid');
 
-    $ignoredProfileFieldsIDs = array_flip(explode(',', getSetting('ignoredProfileFieldsIDs')));
+    $ignoredProfileFieldsIDs = array_flip(explode(',', (string)getSetting('ignoredProfileFieldsIDs')));
 
     $profileFieldsCache = getProfileFieldsCache();
 
@@ -670,7 +670,7 @@ function memberlist_intermediate90(): bool
             continue;
         }
 
-        $fieldTypeValues = explode("\n", $customFieldData['type'], 2);
+        $fieldTypeValues = explode("\n", (string)$customFieldData['type'], 2);
 
         $fieldType = $fieldTypeValues[0] ?? '';
 
@@ -845,7 +845,7 @@ function pre_output_page(string $pageContents): string
 
     $searchFieldOptions = '';
 
-    foreach (explode(',', getSetting('searchFields')) as $searchField) {
+    foreach (explode(',', (string)getSetting('searchFields')) as $searchField) {
         $optionValue = $searchField;
 
         $optionSelect = '';
