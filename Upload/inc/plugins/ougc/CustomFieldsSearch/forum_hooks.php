@@ -233,9 +233,9 @@ function memberlist_search()
 
     $groupSelect = eval(getTemplate('groupsSelect'));
 
-    $customFieldsCache = $mybb->cache->read('profilefields');
+    $customFieldsCache = getProfileFieldsCache();
 
-    if (is_array($customFieldsCache)) {
+    if ($customFieldsCache) {
         $searchTypeFields = $mybb->get_input('searchTypeField', MyBB::INPUT_ARRAY);
 
         $alternativeBackground = alt_trow(true);
@@ -631,7 +631,7 @@ function memberlist_intermediate90(): bool
         $ougcCustomFieldSearchUrlParams['doCustomFieldsSearch'] = 1;
     }
 
-    $customFieldsCache = $mybb->cache->read('profilefields');
+    $customFieldsCache = getProfileFieldsCache();
 
     $customFieldsCacheIDs = array_column($customFieldsCache, 'fid');
 
@@ -857,7 +857,7 @@ function pre_output_page(string $pageContents): string
         $searchFieldOptions .= eval(getTemplate('globalSearchFormSelectOption'));
     }
 
-    foreach ($cache->read('profilefields') as $profileField) {
+    foreach (getProfileFieldsCache() as $profileField) {
         $fieldID = (int)$profileField['fid'];
 
         if (!is_member(getSetting('searchCustomFields'), ['usergroup' => $fieldID, 'additionalgroups' => ''])) {
