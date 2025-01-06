@@ -82,7 +82,7 @@ function load_language()
 {
     global $lang;
 
-    isset($lang->setting_group_ougc_customfsearch) || $lang->load('ougc_customfsearch');
+    isset($lang->ougc_customfsearch) || $lang->load('ougc_customfsearch');
 }
 
 function load_pluginlibrary()

@@ -46,7 +46,7 @@ function _info(): array
 
     return [
         'name' => 'ougc Member List Custom Advanced Search',
-        'description' => $lang->setting_group_ougc_customfsearch_desc,
+        'description' => $lang->ougc_customfsearch_description,
         'website' => 'https://ougc.network',
         'author' => 'Omar G.',
         'authorsite' => 'https://ougc.network',

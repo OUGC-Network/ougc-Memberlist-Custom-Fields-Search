@@ -27,7 +27,7 @@
  ****************************************************************************/
 
 $l = [
-    'setting_group_ougc_customfsearch' => 'ougc Member List Advanced Search',
+    'ougc_customfsearch' => 'ougc Member List Advanced',
 
     'ougc_customfsearch_form_title' => 'Custom Fields',
     'ougc_customfsearch_form_groups' => 'User groups',
